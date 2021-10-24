@@ -27,6 +27,8 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 
+import static org.monarchinitiative.loinc2hpo.guitools.PopUps.getStringFromUser;
+
 @SuppressWarnings({"unchecked", "rawtypes"})
 @Component
 public class Loinc2HpoMainController {
@@ -64,27 +66,26 @@ public class Loinc2HpoMainController {
         this.executor = executorService;
         this.pgProperties = pgProperties;
         this.appHomeDirectory = appHomeDir;
-       // this.tableHidden = new SimpleBooleanProperty(true);
+        // this.tableHidden = new SimpleBooleanProperty(true);
     }
 
 
-
-
-    @FXML public void downloadHPO(ActionEvent e) {
-        String dirpath= Platform.getLoinc2HpoDir().getAbsolutePath();
+    @FXML
+    public void downloadHPO(ActionEvent e) {
+        String dirpath = Platform.getLoinc2HpoDir().getAbsolutePath();
         File f = new File(dirpath);
-        if (f==null || ! (f.exists() && f.isDirectory())) {
+        if (f == null || !(f.exists() && f.isDirectory())) {
             LOGGER.trace("Cannot download hp.obo, because directory not existing at " + f.getAbsolutePath());
             return;
         }
-        String BASENAME="hp.json";
+        String BASENAME = "hp.json";
 
         ProgressIndicator pb = new ProgressIndicator();
-        javafx.scene.control.Label label=new javafx.scene.control.Label("downloading hp.obo/.owl...");
+        javafx.scene.control.Label label = new javafx.scene.control.Label("downloading hp.obo/.owl...");
         FlowPane root = new FlowPane();
         root.setPadding(new Insets(10));
         root.setHgap(10);
-        root.getChildren().addAll(label,pb);
+        root.getChildren().addAll(label, pb);
         Scene scene = new Scene(root, 400, 100);
         Stage window = new Stage();
         window.setTitle("HPO download");
@@ -94,8 +95,8 @@ public class Loinc2HpoMainController {
         window.show();
         hpodownload.setOnSucceeded(event -> {
             window.close();
-            LOGGER.trace(String.format("Successfully downloaded hpo to %s",dirpath));
-            String fullpath=String.format("%s%shp.json",dirpath,File.separator);
+            LOGGER.trace(String.format("Successfully downloaded hpo to %s", dirpath));
+            String fullpath = String.format("%s%shp.json", dirpath, File.separator);
 
             settings.setHpoJsonPath(fullpath);
             Settings.writeSettings(settings, Platform.getPathToSettingsFile());
@@ -109,7 +110,8 @@ public class Loinc2HpoMainController {
     }
 
 
-    @FXML public  void setPathToLoincCoreTableFile(ActionEvent e) {
+    @FXML
+    public void setPathToLoincCoreTableFile(ActionEvent e) {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Choose LOINC Core Table file");
         File f = chooser.showOpenDialog(null);
@@ -117,14 +119,16 @@ public class Loinc2HpoMainController {
             String path = f.getAbsolutePath();
             settings.setLoincCoreTablePath(path);
             Settings.writeSettings(settings, Platform.getPathToSettingsFile());
-            LOGGER.trace(String.format("Setting path to LOINC Core Table file to %s",path));
+            LOGGER.trace(String.format("Setting path to LOINC Core Table file to %s", path));
         } else {
             LOGGER.error("Unable to obtain path to LOINC Core Table file");
         }
         e.consume();
     }
 
-    /** Show the about message */
+    /**
+     * Show the about message
+     */
     @FXML
     private void aboutWindow(ActionEvent e) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -136,21 +140,21 @@ public class Loinc2HpoMainController {
         e.consume();
     }
 
-    @FXML private void setBiocuratorID(ActionEvent e) {
-        System.err.println("[WARNING] Biocurator dialog not implemented");
-       /* String current = settings.getBiocuratorID();
-        String prompText = (current == null || current.isEmpty())
-                ? "e.g., MGM:rrabbit" : current;
-        String bcid=getStringFromUser("Biocurator ID", prompText, "Enter biocurator ID");
-        if (bcid!=null && bcid.indexOf(":")>0) {
+    /**
+     * Get a biocurator string such as HP:rrabbit from the user.
+     */
+    @FXML
+    private void setBiocuratorID(ActionEvent e) {
+        String current = settings.getBiocuratorID();
+        String prompText = (current == null || current.isEmpty()) ? "e.g., MGM:rrabbit" : current;
+        String bcid = getStringFromUser("Biocurator ID", prompText, "Enter biocurator ID");
+        if (bcid != null && bcid.indexOf(":") > 0) {
             settings.setBiocuratorID(bcid);
-            Settings.writeSettings(settings, Loinc2HpoPlatform.getPathToSettingsFile());
+            Settings.writeSettings(settings, Platform.getPathToSettingsFile());
         } else {
-            logger.error(String.format("Invalid biocurator ID; must be of the form MGM:rrabbit; you tried: \"%s\"",
-                    bcid!=null?bcid:""));
+            LOGGER.error(String.format("Invalid biocurator ID; must be of the form MGM:rrabbit; you tried: \"%s\"",
+                    bcid != null ? bcid : ""));
         }
-
-        */
         e.consume();
     }
 
@@ -161,19 +165,26 @@ public class Loinc2HpoMainController {
         System.err.println("WARNING -- SET PATH NOT IMPL");
     }
 
-    /** Open a help dialog */
-    @FXML private void openHelpDialog() {
+    /**
+     * Open a help dialog
+     */
+    @FXML
+    private void openHelpDialog() {
         System.err.println("[WARNING] Help dialog not implemented");
         //HelpViewFactory.openHelpDialog();
     }
 
-    /** Show the settings */
-    @FXML private void openSettingsDialog() {
+    /**
+     * Show the settings
+     */
+    @FXML
+    private void openSettingsDialog() {
         SettingsViewFactory.openSettingsDialog(settings);
     }
 
     /**
      * The function determines whether the data in annotations map and loincCategories has changed
+     *
      * @return
      */
     public boolean isSessionDataChanged() {
@@ -244,6 +255,7 @@ public class Loinc2HpoMainController {
         }
 
     }
+
     public void saveBeforeExit() {
         LOGGER.trace("SaveBeforeExit() is called");
         if (isSessionDataChanged()) {
@@ -253,13 +265,14 @@ public class Loinc2HpoMainController {
         }
     }
 
-    @FXML public void close(ActionEvent e) {
+    @FXML
+    public void close(ActionEvent e) {
 
         e.consume(); //important to consume it first; otherwise,
         //window will always close
         if (isSessionDataChanged()) {
 
-            String[] choices = new String[] {"Yes", "No"};
+            String[] choices = new String[]{"Yes", "No"};
             Optional<String> choice = PopUps.getToggleChoiceFromUser(choices,
                     "Session has been changed. Save changes? ", "Exit " +
                             "Confirmation");
