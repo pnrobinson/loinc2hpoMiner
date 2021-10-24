@@ -29,7 +29,7 @@
 
 <SplitPane dividerPositions="0.4605475040257649" onDragDone="#handleDragDone" onDragOver="#handleDragOver"
            orientation="VERTICAL" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1"
-           fx:controller="org.monarchinitiative.loinc2hpogui.controller.AnnotateTabController">
+           fx:controller="org.monarchinitiative.loinc2hpo.AnnotateTabController">
     <SplitPane dividerPositions="0.6185308848080133">
         <VBox>
             <HBox VBox.vgrow="NEVER">
@@ -257,7 +257,7 @@
                     <HBox.margin>
                         <Insets left="50.0"/>
                     </HBox.margin>
-                    <fx:include source="currentAnnotation.fxml"/>
+                  <!--  <fx:include source="currentAnnotation.fxml"/> -->
                 </Button>
             </HBox>
             <TextArea fx:id="annotationNoteField" promptText="Optional: note for annotation" wrapText="true"

@@ -5,8 +5,6 @@ package org.monarchinitiative.loinc2hpo.sparql;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.management.Query;
-import java.io.InputStream;
 import java.util.*;
 
 

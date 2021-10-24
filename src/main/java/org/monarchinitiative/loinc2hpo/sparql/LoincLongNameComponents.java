@@ -32,9 +32,9 @@ public class LoincLongNameComponents {
     private final String assayMethod;
     private final String assayType;
     /** List of stop words and general words that we filter out of LOINC labels prior to text mining. */
-    private static final Set invalid_words =
-            Stream.of("mean", "in", "of", "identified", "cell", "conjugated", "other", "virus",
-                    "normal", "on", "total", "identified").collect(Collectors.toSet());
+    private static final Set<String> invalid_words =
+            Set.of("mean", "in", "of", "identified", "cell", "conjugated", "other", "virus",
+                    "normal", "on", "total", "identified");
 
 
     public LoincLongNameComponents(String parameter, String tissue, String method, String type) {

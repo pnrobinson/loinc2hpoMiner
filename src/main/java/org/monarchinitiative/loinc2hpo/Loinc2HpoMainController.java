@@ -12,6 +12,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.monarchinitiative.loinc2hpo.guitools.Platform;
 import org.monarchinitiative.loinc2hpo.guitools.PopUps;
+import org.monarchinitiative.loinc2hpo.guitools.SettingsViewFactory;
 import org.monarchinitiative.loinc2hpo.io.HpoMenuDownloader;
 import org.monarchinitiative.loinc2hpo.model.Settings;
 import org.slf4j.Logger;
@@ -168,8 +169,7 @@ public class Loinc2HpoMainController {
 
     /** Show the settings */
     @FXML private void openSettingsDialog() {
-        System.err.println("[WARNING] Settings dialog not implemented");
-        //SettingsViewFactory.openSettingsDialog(settings);
+        SettingsViewFactory.openSettingsDialog(settings);
     }
 
     /**
