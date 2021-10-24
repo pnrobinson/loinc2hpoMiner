@@ -120,7 +120,7 @@ public class Loinc2HpoAnnotationModel {
         writer.close();
     }
 
-    public static Map<LoincId, Loinc2HpoAnnotationModel> from_csv(String path) throws Exception {
+    public static Map<LoincId, Loinc2HpoAnnotationModel> from_csv(String path) {
 
         List<Loinc2HpoAnnotationCsvEntry> csvEntries = Loinc2HpoAnnotationCsvEntry.importAnnotations(path);
 
@@ -171,14 +171,12 @@ public class Loinc2HpoAnnotationModel {
                         .build();
                 annotationModelMap.put(loincId, newModel);
             }
-
             //add annotation data
             annotationModelMap.get(loincId)
                     .getCandidateHpoTerms()
                     .put(interpretationCode, mappedTo);
 
         }
-
         return annotationModelMap;
     }
 

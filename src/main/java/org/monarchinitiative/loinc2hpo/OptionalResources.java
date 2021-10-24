@@ -5,6 +5,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import org.monarchinitiative.loinc2hpo.model.Loinc2HpoAnnotationModel;
 import org.monarchinitiative.loinc2hpo.model.Settings;
 import org.monarchinitiative.loinc2hpo.model.loinc.LoincEntry;
 import org.monarchinitiative.loinc2hpo.model.loinc.LoincId;
@@ -119,4 +120,18 @@ public class OptionalResources {
         setAnnotationFile(settings.getAnnotationFile());
         setHpoJsonPath(settings.getHpoJsonPath());
     }
+
+    private Map<LoincId, Loinc2HpoAnnotationModel> loincAnnotationMap = null;
+
+    public Map<LoincId, Loinc2HpoAnnotationModel> getLoincAnnotationMap (){
+        if (loincAnnotationMap == null) {
+            if (annotationFileProperty() == null) {
+                return Map.of();
+            }
+            this.loincAnnotationMap = Loinc2HpoAnnotationModel.from_csv(annotationFileProperty().get());
+        }
+        return this.loincAnnotationMap;
+    }
+
+
 }

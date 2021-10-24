@@ -42,6 +42,7 @@ import org.monarchinitiative.loinc2hpo.model.Settings;
 import org.monarchinitiative.loinc2hpo.model.loinc.LoincEntry;
 import org.monarchinitiative.loinc2hpo.model.loinc.LoincId;
 import org.monarchinitiative.loinc2hpo.model.loinc.LoincScale;
+import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.Term;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
@@ -57,6 +58,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
+import static javafx.application.Platform.runLater;
 import static org.monarchinitiative.loinc2hpo.guitools.PopUps.getStringFromUser;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
@@ -204,7 +206,7 @@ public class Loinc2HpoMainController {
         // this.tableHidden = new SimpleBooleanProperty(true);
     }
     @FXML private void initialize() {
-        LOGGER.trace("MainController initialize() called");
+        LOGGER.trace("initialize() called");
         //read in settings from file
         File settingsFile = Settings.getPathToSettingsFileAndEnsurePathExists();
         try {
@@ -229,12 +231,12 @@ public class Loinc2HpoMainController {
         modeButton.setTooltip(new Tooltip("Switch between basic and advanced annotation mode"));
         autoQueryButton.setTooltip(new Tooltip("Find candidate HPO terms"));
 
-        hpoListView.setCellFactory(new Callback<ListView<HpoClassFound>, ListCell<HpoClassFound>>(){
+        hpoListView.setCellFactory(new Callback<>() {
             @Override
             public ListCell<HpoClassFound> call(ListView<HpoClassFound> param) {
                 return new ListCell<HpoClassFound>() {
                     @Override
-                    public void updateItem(HpoClassFound hpo, boolean empty){
+                    public void updateItem(HpoClassFound hpo, boolean empty) {
                         super.updateItem(hpo, empty);
                         if (hpo != null) {
                             setText(hpo.toString());
@@ -254,9 +256,9 @@ public class Loinc2HpoMainController {
         treeView.setCellFactory(new Callback<TreeView<HpoTreeView>, TreeCell<HpoTreeView>>() {
             @Override
             public TreeCell<HpoTreeView> call(TreeView<HpoTreeView> param) {
-                return new TreeCell<HpoTreeView>() {
+                return new TreeCell<>() {
                     @Override
-                    public void updateItem(HpoTreeView hpo, boolean empty){
+                    public void updateItem(HpoTreeView hpo, boolean empty) {
                         super.updateItem(hpo, empty);
                         if (empty) {
                             setText(null);
@@ -514,6 +516,68 @@ logger.trace("MainController initialize() called");
 
     }
 
+    public void initializeLoinc2HpoAnnotationTable() {
+        LOGGER.trace("initializeLoinc2HpoAnnotationTable called");
+        Ontology hpo = optionalResources.getOntology();
+        if (hpo == null) {
+            PopUps.showWarningDialog("ERROR", "Ontology not initialized",
+                    "Cannot show LOINC2HPO annotations before HPO is initialized");
+            return;
+        }
+        Map<TermId, Term> termMap = hpo.getTermMap();
+        loincAnnotationTableView.setEditable(false);
+        loincNumberColumn.setSortable(true);
+        loincNumberColumn.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getLoincId().toString()));
+        loincScaleColumn.setSortable(true);
+        loincScaleColumn.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getLoincScale().toString()));
+        belowNormalHpoColumn.setSortable(true);
+        //belowNormalHpoColumn.setCellValueFactory(cdf -> cdf.getValue().whenValueLow() == null ? new ReadOnlyStringWrapper("\" \"") : new ReadOnlyStringWrapper(termMap.get(cdf.getValue().whenValueLow()).getName()));
+        belowNormalHpoColumn.setCellValueFactory(cdf -> {
+            TermId termId = cdf.getValue().whenValueLow();
+            if (termId == null) { //no annotation for low
+                return new ReadOnlyStringWrapper("\" \"");
+            } else if (!termMap.containsKey(termId)) { //annotation termid not found in current hpo
+                return new ReadOnlyStringWrapper(termId.getValue());
+            } else { //show term name
+                return new ReadOnlyStringWrapper(termMap.get(termId).getName());
+            }
+        });
+        notAbnormalHpoColumn.setSortable(true);
+        //notAbnormalHpoColumn.setCellValueFactory(cdf -> cdf.getValue().whenValueNormalOrNegative() == null ? new ReadOnlyStringWrapper("\" \"")
+        //        : new ReadOnlyStringWrapper(cdf.getValue().whenValueNormalOrNegative().getName()));
+        notAbnormalHpoColumn.setCellValueFactory(cdf -> {
+            TermId termId = cdf.getValue().whenValueNormalOrNegative();
+            if (termId == null) { //no annotation
+                return new ReadOnlyStringWrapper("\" \"");
+            } else if (!termMap.containsKey(termId)){//previously annotated with a term not found in current hpo
+                return new ReadOnlyStringWrapper(termId.getValue());
+            } else { //annotated with a term present in current hpo
+                return new ReadOnlyStringWrapper(termMap.get(termId).getName());
+            }
+        });
+        aboveNormalHpoColumn.setSortable(true);
+//        aboveNormalHpoColumn.setCellValueFactory(cdf -> cdf.getValue().whenValueHighOrPositive() == null ? new ReadOnlyStringWrapper("\" \"")
+//        : new ReadOnlyStringWrapper(cdf.getValue().whenValueHighOrPositive().getName()));
+        aboveNormalHpoColumn.setCellValueFactory(cdf -> {
+            TermId termId = cdf.getValue().whenValueHighOrPositive();
+            if (termId == null) { //no annotation
+                return new ReadOnlyStringWrapper("\" \"");
+            } else if (!termMap.containsKey(termId)){//previously annotated with a term not found in current hpo
+                return new ReadOnlyStringWrapper(termId.getValue());
+            } else { //annotated with a term present in current hpo
+                return new ReadOnlyStringWrapper(termMap.get(termId).getName());
+            }
+        });
+        loincFlagColumn.setSortable(true);
+        loincFlagColumn.setCellValueFactory(cdf -> cdf.getValue() != null && cdf.getValue().getFlag() ?
+                new ReadOnlyStringWrapper("Y") : new ReadOnlyStringWrapper(""));
+        noteColumn.setSortable(true);
+        noteColumn.setCellValueFactory(cdf -> cdf.getValue() == null ? new ReadOnlyStringWrapper("") :
+                new ReadOnlyStringWrapper(cdf.getValue().getNote()));
+        updateSummary();
+        refreshLoinc2HpoAnnotationTable();
+    }
+
     private void clearAbnormalityTextField(){
         annotationTextFieldLeft.setText("");
         annotationTextFieldRight.setText("");
@@ -631,7 +695,7 @@ logger.trace("MainController initialize() called");
                     } catch (InterruptedException e) {
                         //do nothing
                     } finally {
-                        javafx.application.Platform.runLater(alert::close);
+                        runLater(alert::close);
                     }
                     return null;
                 }
@@ -761,7 +825,7 @@ logger.trace("MainController initialize() called");
                     } catch (InterruptedException e) {
                         //do nothing
                     } finally {
-                        javafx.application.Platform.runLater(alert::close);
+                        runLater(alert::close);
                     }
                     return null;
                 }
@@ -789,7 +853,7 @@ logger.trace("MainController initialize() called");
         loincTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
 
         if (this.loincmap.isEmpty()) {
-            javafx.application.Platform.runLater(() -> {
+            runLater(() -> {
                 PopUps.showWarningDialog("No LOINC data was imported",
                         "Warning",
                         "We could not import any LOINC data - \n did you import the correct LOINC file?");
@@ -798,7 +862,7 @@ logger.trace("MainController initialize() called");
         // now ingest the HPO
         String pathToHPO = settings.getHpoJsonPath();
         LOGGER.info("pathToHPO: " + pathToHPO);
-        initHPOmodelButton(e);
+        initializeLoinc2HpoAnnotationTable();
         e.consume();
     }
 
@@ -806,42 +870,6 @@ logger.trace("MainController initialize() called");
     private void showAnnotationWindow(ActionEvent e) {
         e.consume();
         System.err.println("[showAnnotationWindow]");
-    }
-
-
-    @FXML private void initHPOmodelButton(ActionEvent e){
-        System.err.println("[WARINGIN initHPOmodelButton -- do we need this still?");
-
-        //org.apache.jena.rdf.appTempData.AppTempData hpoModel = SparqlQuery.getOntologyModel(pathToHPO);
-        //SparqlQuery.setHPOmodel(hpoModel);
-        // The following codes run nicely from IDE, but fails in Jar.
-        //create a task to create HPO appTempData
-//        Task<org.apache.jena.rdf.model.Model> task = new OntologyModelBuilderForJena(pathToHPO);
-//        //Platform.runLater(new Thread(task)::start);
-//        new Thread(task).start();
-//        task.setOnSucceeded(x -> {
-//            SparqlQuery.setHPOmodel(task.getValue());
-//            IntializeHPOmodelbutton.setStyle("-fx-background-color: #00ff00");
-//            IntializeHPOmodelbutton.setText("HPO initialized");
-//        });
-//        task.setOnRunning(x -> {
-//            IntializeHPOmodelbutton.setStyle("-fx-background-color: #ffc0cb");
-//            IntializeHPOmodelbutton.setText("HPO initializing...");
-//        });
-//        task.setOnFailed(x -> {
-//            Alert alert = new Alert(Alert.AlertType.ERROR);
-//            alert.setTitle("Failed to create HPO appTempData");
-//            alert.setContentText("Check whether hpo.owl is downloaded. Path to hpo.owl is set to: " + pathToHPO);
-//            IntializeHPOmodelbutton.setStyle("-fx-background-color: #ff0000");
-//            IntializeHPOmodelbutton.setText("Retry");
-//            alert.showAndWait();
-//        });
-
-        if (e != null) {
-            e.consume();
-        }
-
-
     }
 
     @FXML private void search(ActionEvent e) {
@@ -2426,7 +2454,7 @@ logger.trace("MainController initialize() called");
 
     }
     public void updateSummary() {
-        javafx.application.Platform.runLater(()->{
+        runLater(()->{
             WebView wview = new WebView();
             WebEngine contentWebEngine = wview.getEngine();
             contentWebEngine.loadContent(getHTML());
@@ -2463,88 +2491,15 @@ logger.trace("MainController initialize() called");
     }
 
 
-    public void refreshTable() {
-        /*
-        Map<LoincId, Loinc2HpoAnnotationModel> testmap = appResources.getLoincAnnotationMap();
-        Platform.runLater(() -> {
+    /**
+     * Ingest the existing annotation file and display it in one of the tabs of the accordeon.
+     */
+    private void refreshLoinc2HpoAnnotationTable() {
+        Map<LoincId, Loinc2HpoAnnotationModel> testmap = optionalResources.getLoincAnnotationMap();
+        runLater(() -> {
             loincAnnotationTableView.getItems().clear();
             loincAnnotationTableView.getItems().addAll(testmap.values());
         });
-        */
-    }
-
-    /**
-     * This method set up the filename for annotations data and call the following function to import data
-     */
-    public void importLoincAnnotation() {
-        /*
-        logger.debug("Num of annotations in appTempData: " + appResources.getLoincAnnotationMap().size());
-
-        FileChooser chooser = new FileChooser();
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("TSV files (*.txt)", "*.tsv"));
-        chooser.setTitle("Choose annotation file");
-        File f = chooser.showOpenDialog(null);
-        if (f != null) {
-            String path = f.getAbsolutePath();
-
-            try {
-                Map<LoincId, Loinc2HpoAnnotationModel> annotationMap =
-                        Loinc2HpoAnnotationModel.from_csv(path);
-                appResources.getLoincAnnotationMap().putAll(annotationMap);
-                refreshTable();
-            } catch (Exception e) {
-                logger.error("ERROR!!!!!!!!");
-                return;
-            }
-
-
-        }
-        logger.debug("Num of annotations in appTempData: " + appResources.getLoincAnnotationMap().size());
-        refreshTable();
-
-        annotateTabController.changeColorLoincTableView();
-
-
-         */
-    }
-
-    public void importLoincAnnotation(String pathToOpen) {
-    /*
-        logger.debug("Num of annotations in appTempData: " + appResources.getLoincAnnotationMap().size());
-
-        //if using the LoincAnnotationSerializerTSVSingleFile for serialization
-        String tsvSingleFile = pathToOpen + File.separator
-                + Constants.TSVSingleFileFolder + File.separator + Constants.TSVSingleFileName;
-        Map<LoincId, Loinc2HpoAnnotationModel> annotationMap = new LinkedHashMap<>();
-
-        try {
-            annotationMap = Loinc2HpoAnnotationModel.from_csv(tsvSingleFile);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        if (AnnotationQC.hasUnrecognizedTermId(annotationMap, appResources.getHpo())) {
-            Platform.runLater(new Runnable() {
-                @Override
-                public void run() {
-                    //Alert alert = new Alert(Alert.AlertType.WARNING, "I Warn You!", ButtonType.OK, ButtonType.CANCEL);
-                    Alert alert1 = new Alert(Alert.AlertType.WARNING);
-                    alert1.setHeaderText("Error loading annotation data");
-                    alert1.setContentText("This is typically due to that HPO is outdated. Update your local copy of HPO and restart this app.");
-                    alert1.setTitle("Warning");
-                    Stage stage = (Stage) alert1.getDialogPane().getScene().getWindow();
-                    stage.setAlwaysOnTop(true);
-                    stage.showAndWait();
-                }
-            });
-        }
-
-        appResources.getLoincAnnotationMap().putAll(annotationMap);
-        logger.info("Num of annotations in appTempData: " + appResources.getLoincAnnotationMap().size());
-        refreshTable();
-        annotateTabController.changeColorLoincTableView();
-
-     */
     }
 
     @FXML
