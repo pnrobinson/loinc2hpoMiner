@@ -23,6 +23,7 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -68,6 +69,111 @@ public class Loinc2HpoMainController {
         this.appHomeDirectory = appHomeDir;
         // this.tableHidden = new SimpleBooleanProperty(true);
     }
+    @FXML private void initialize() {
+        LOGGER.trace("MainController initialize() called");
+        //read in settings from file
+        File settingsFile = Settings.getPathToSettingsFileAndEnsurePathExists();
+        try {
+            Settings.loadSettings(settings, settingsFile.getPath());
+        } catch (IOException e) {
+            LOGGER.trace("okay, this is the first time you use it. Configure the settings now");
+        }
+
+
+
+    /*
+    @FXML private void initialize() {
+logger.trace("MainController initialize() called");
+        annotateTabButton.setDisable(true);
+        Loinc2HPOAnnotationsTabButton.setDisable(true);
+        Loinc2HpoConversionTabButton.setDisable(true);
+
+        //once configure is done, enable all tabs
+        configurationComplete.addListener((observable, oldValue, newValue) -> {
+            logger.info(String.format("configurationComplete state change. old: %s; new; %s", oldValue, newValue));
+            if (observable != null && newValue) {
+                logger.info("configuration is completed");
+                annotateTabButton.setDisable(false);
+                Loinc2HPOAnnotationsTabButton.setDisable(false);
+                Loinc2HpoConversionTabButton.setDisable(false);
+
+                appResources = injector.getInstance(AppResources.class);
+                //@TODO: figure out how to control init after construction
+                appResources.init();
+
+                if (AnnotationQC.hasUnrecognizedTermId(appResources.getLoincAnnotationMap(), appResources.getHpo())) {
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            //Alert alert = new Alert(Alert.AlertType.WARNING, "I Warn You!", ButtonType.OK, ButtonType.CANCEL);
+                            Alert alert1 = new Alert(Alert.AlertType.WARNING);
+                            alert1.setHeaderText("Error loading annotation data");
+                            alert1.setContentText("This is typically due to that HPO is outdated. Update your local copy of HPO and restart this app.\n" + AnnotationQC.unrecognizedTermId(appResources.getLoincAnnotationMap(), appResources.getHpo()));
+                            alert1.setTitle("Warning");
+                            Stage stage = (Stage) alert1.getDialogPane().getScene().getWindow();
+                            stage.setAlwaysOnTop(true);
+                            stage.showAndWait();
+                        }
+                    });
+                }
+
+                annotateTabController.setAppTempData(appTempData);
+                loinc2HpoAnnotationsTabController.setAppTempData(appTempData);
+                loinc2HPOConversionTabController.setAppTempData(appTempData);
+                loinc2HpoAnnotationsTabController.setAppResources(appResources);
+
+                annotateTabController.defaultStartUp();
+            }
+        });
+
+        //read in settings from file
+        File settingsFile = getPathToSettingsFileAndEnsurePathExists();
+        try {
+            Settings.loadSettings(settings, settingsFile.getPath());
+        } catch (IOException e) {
+            logger.trace("okay, this is the first time you use it. Configure the settings now");
+        }
+
+        configurationComplete.set(settings.isCompleteProperty().getValue());
+        configurationComplete.bind(settings.isCompleteProperty());
+
+        if (Loinc2HpoPlatform.isMacintosh()) {
+            loincmenubar.useSystemMenuBarProperty().set(true);
+        }
+
+
+        //control how menu items should be shown
+        importAnnotationButton.setDisable(true);
+        exportMenu.setDisable(true);
+        tabPane.getSelectionModel().selectedItemProperty()
+                .addListener((observable, oldValue, newValue) -> {
+
+            if(newValue.equals(Loinc2HPOAnnotationsTabButton)) {
+                importAnnotationButton.setDisable(false);
+                exportMenu.setDisable(false);
+                clearMenu.setDisable(false);
+            } else {
+                importAnnotationButton.setDisable(true);
+                exportMenu.setDisable(true);
+                clearMenu.setDisable(true);
+            }
+
+
+        });
+
+        //@TODO: to decide whether to remove the following menuitems
+        importLoincCategory.setVisible(false);
+        exportLoincCategory.setVisible(false);
+        saveAnnotationsMenuItem.setVisible(false);
+        saveAnnotationsAsMenuItem.setVisible(false);
+        appendAnnotationsToMenuItem.setVisible(false);
+        clearMenu.setVisible(false);
+        updateHpoButton.setVisible(false);
+        */
+
+    }
+
+
 
 
     @FXML
@@ -162,7 +268,19 @@ public class Loinc2HpoMainController {
     @FXML
     private void setPathToCurationData(ActionEvent e) {
         e.consume();
-        System.err.println("WARNING -- SET PATH NOT IMPL");
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Set path to LOINC2HPO annotation file (local clone from GitHub).");
+        File f = chooser.showOpenDialog(null);
+        if (f != null) {
+            String path = f.getAbsolutePath();
+            settings.setAnnotationFile(path);
+            Settings.writeSettings(settings, Platform.getPathToSettingsFile());
+            LOGGER.trace(String.format("Setting path to LOINC2HPO annotation file to %s", path));
+        } else {
+            LOGGER.error("Unable to obtain path to LOINC2HPO annotation file");
+            PopUps.showWarningDialog("Warning", "Error",
+                    "Could not set path to LOINC2HPO annotation file");
+        }
     }
 
     /**
@@ -199,13 +317,13 @@ public class Loinc2HpoMainController {
     private void handleSave(ActionEvent e) {
         LOGGER.trace("handleSaveSession");
         //Create a session if it is saved for the first time
-        if (settings.getAnnotationFolder() == null) {
+        if (settings.getAnnotationFile() == null) {
             PopUps.showWarningDialog("Warning", "Error",
                     "Attempt to save files without annotation folder");
             return;
         }
 
-        String dataDir = settings.getAnnotationFolder() + File.separator + "Data";
+        String dataDir = settings.getAnnotationFile() + File.separator + "Data";
         System.err.println("WARNING -- SAVE NOT IMPLEMENTED");
 //
  /*

@@ -42,7 +42,7 @@ public class SettingsViewFactory {
         sb.append("\n\nMandatory Settings:\n");
         sb.append(String.format("<li>Path to LOINC Core Table: %s</li>",settings.getLoincCoreTablePath()));
         sb.append(String.format("<li>Path to <tt>hp.json</tt> file: %s</li>",settings.getHpoJsonPath()));
-        sb.append(String.format("<li>Path to annotation file: %s</li>",settings.getAnnotationFolder()));
+        sb.append(String.format("<li>Path to annotation file: %s</li>",settings.getAnnotationFile()));
 
         sb.append("\n\nOptional Settings:\n");
         sb.append(String.format("<li>Biocurator ID: %s</li>",settings.getBiocuratorID()));

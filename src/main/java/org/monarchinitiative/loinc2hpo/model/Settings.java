@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.monarchinitiative.loinc2hpo.guitools.Platform.getLoinc2HpoDir;
+import static org.monarchinitiative.loinc2hpo.guitools.Platform.getPathToSettingsFile;
+
 /**
  * This class parses the key:value setting file for LOINC2HPO app that is written to the user's home
  * directory, something like the following.
@@ -31,7 +34,8 @@ public class Settings {
 
     private StringProperty hpoJsonPath;
     private StringProperty loincCoreTablePath;
-    private StringProperty annotationFolder;
+    /** Path to the LOINC2HPO annotations.tsv file */
+    private StringProperty annotationFile;
     private StringProperty biocuratorID;
     private Map<String, String> userCreatedLoincListsColor;
     private BooleanProperty isComplete = new SimpleBooleanProperty(false);
@@ -39,21 +43,20 @@ public class Settings {
     public Settings() {
         this.hpoJsonPath = new SimpleStringProperty();
         this.loincCoreTablePath = new SimpleStringProperty();
-        this.annotationFolder = new SimpleStringProperty();
+        this.annotationFile = new SimpleStringProperty();
         this.biocuratorID = new SimpleStringProperty();
         this.userCreatedLoincListsColor = new HashMap<>();
     }
 
-    public Settings(String hpoJsonPath, String loincCoreTablePath, String annotationFolder, String biocuratorID, Map<String, String> userCreatedLoincListsColor) {
+    public Settings(String hpoJsonPath, String loincCoreTablePath, String annotationTsv, String biocuratorID, Map<String, String> userCreatedLoincListsColor) {
         this.hpoJsonPath = new SimpleStringProperty(hpoJsonPath);
         this.loincCoreTablePath = new SimpleStringProperty(loincCoreTablePath);
-        this.annotationFolder = new SimpleStringProperty(annotationFolder);
+        this.annotationFile = new SimpleStringProperty(annotationTsv);
         this.biocuratorID = new SimpleStringProperty(biocuratorID);
         this.userCreatedLoincListsColor = userCreatedLoincListsColor;
     }
 
     public static Settings loadSettings(Settings settings, String settingsPath) throws IOException {
-
         BufferedReader br = new BufferedReader(new FileReader(settingsPath));
         String line = null;
         while ((line = br.readLine()) != null) {
@@ -71,7 +74,7 @@ public class Settings {
             if (key.equals("biocuratorid")) settings.setBiocuratorID(value);
             else if (key.equals("loincTablePath")) settings.setLoincCoreTablePath(value);
             else if (key.equals("hp-json")) settings.setHpoJsonPath(value);
-            else if (key.equals("autosave to")) settings.setAnnotationFolder(value);
+            else if (key.equals("autosave to")) settings.setAnnotationFile(value);
             else if (key.equals("loinc-list-color")) {
                 String[] entries = value.split("\\|");
                 settings.setUserCreatedLoincListsColor(
@@ -91,7 +94,7 @@ public class Settings {
             String biocuratorID = settings.getBiocuratorID();
             String pathToLoincCoreTableFile = settings.getLoincCoreTablePath();
             String pathToHpoJsonFile = settings.getHpoJsonPath();
-            String pathToAutoSavedFolder = settings.getAnnotationFolder();
+            String pathToAutoSavedFolder = settings.getAnnotationFile();
             Map<String, String> userCreatedLoincListsColor = settings.getUserCreatedLoincListsColor();
             if (biocuratorID!=null) {
                 bw.write(String.format("biocuratorid:%s\n",biocuratorID));
@@ -119,6 +122,26 @@ public class Settings {
             e.printStackTrace();
             logger.error("Could not write settings at " + path);
         }
+    }
+
+    /**
+     * This function will create the .loinc2hpo directory in the user's home directory if it does not yet exist.
+     * Then it will return the path of the settings file.
+     * @return
+     */
+    public static File getPathToSettingsFileAndEnsurePathExists() {
+        File loinc2HpoUserDir = getLoinc2HpoDir();
+        if (!loinc2HpoUserDir.exists()) {
+            File fck = new File(loinc2HpoUserDir.getAbsolutePath());
+            if (!fck.mkdir()) { // make sure config directory is created, exit if not
+                logger.error("Unable to create LOINC2HPO config directory.\n"
+                        + "Even though this is a serious problem I'm exiting gracefully. Bye.");
+                System.exit(1);
+            }
+        }
+        String defaultSettingsPath = getPathToSettingsFile();
+        File settingsFile=new File(defaultSettingsPath);
+        return settingsFile;
     }
 
     public static Logger getLogger() {
@@ -156,16 +179,16 @@ public class Settings {
         this.isComplete.set(status());
     }
 
-    public String getAnnotationFolder() {
-        return annotationFolder.get();
+    public String getAnnotationFile() {
+        return annotationFile.get();
     }
 
-    public StringProperty annotationFolderProperty() {
-        return annotationFolder;
+    public StringProperty annotationFileProperty() {
+        return annotationFile;
     }
 
-    public void setAnnotationFolder(String annotationFolder) {
-        this.annotationFolder.set(annotationFolder);
+    public void setAnnotationFile(String annotationFile) {
+        this.annotationFile.set(annotationFile);
         this.isComplete.set(status());
     }
 
@@ -198,7 +221,7 @@ public class Settings {
     public boolean status() {
         return this.hpoJsonPath.get() != null &&
                 this.loincCoreTablePath.get() != null &&
-                this.annotationFolder.get() != null;
+                this.annotationFile.get() != null;
     }
 
     public String toString() {
@@ -207,7 +230,7 @@ public class Settings {
         builder.append("\n");
         builder.append("loincCoreTable: " + loincCoreTablePath);
         builder.append("\n");
-        builder.append("annotationFolder: " + annotationFolder);
+        builder.append("annotationFile: " + annotationFile);
         return builder.toString();
     }
 

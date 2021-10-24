@@ -797,8 +797,8 @@ public class AnnotateTabController {
         List<LoincEntry> entrylist=new ArrayList<>();
         String enlistName;
         FileChooser chooser = new FileChooser();
-        if (settings.getAnnotationFolder() != null) {
-            chooser.setInitialDirectory(new File(settings.getAnnotationFolder()));
+        if (settings.getAnnotationFile() != null) {
+            chooser.setInitialDirectory(new File(settings.getAnnotationFile()));
         }
         chooser.setTitle("Choose File containing a list of interested Loinc " +
                 "codes");
