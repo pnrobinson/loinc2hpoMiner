@@ -78,6 +78,15 @@ public class Loinc2HpoMainController {
         } catch (IOException e) {
             LOGGER.trace("okay, this is the first time you use it. Configure the settings now");
         }
+        optionalResources.addSettings(settings);
+        // run the initialization task on a separate thread
+        StartupTask task = new StartupTask(optionalResources, pgProperties);
+        //this.hpoReadyLabel.textProperty().bind(task.messageProperty());
+     //   task.setOnSucceeded(e -> this.hpoReadyLabel.textProperty().unbind());
+        this.executor.submit(task);
+
+        // only enable analyze if Ontology downloaded (enabled property watches
+        //this.setupButton.disableProperty().bind(optionalResources.ontologyProperty().isNull());
 
 
 

@@ -1,4 +1,4 @@
-package org.monarchinitiative.loinc2hpo.sparql;
+package org.monarchinitiative.loinc2hpo.io.loincparser;
 
 /**
  * The class parses a loinc long common name and return a LoincLongNameComponents

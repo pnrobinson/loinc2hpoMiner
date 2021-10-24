@@ -1,7 +1,6 @@
 package org.monarchinitiative.loinc2hpo;
 
 
-import com.google.common.collect.ImmutableMap;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -41,10 +40,10 @@ import org.monarchinitiative.loinc2hpo.model.Settings;
 import org.monarchinitiative.loinc2hpo.model.loinc.LoincEntry;
 import org.monarchinitiative.loinc2hpo.model.loinc.LoincId;
 import org.monarchinitiative.loinc2hpo.model.loinc.LoincScale;
-import org.monarchinitiative.loinc2hpo.sparql.HPO_Class_Found;
-import org.monarchinitiative.loinc2hpo.sparql.LoincLongNameComponents;
-import org.monarchinitiative.loinc2hpo.sparql.LoincLongNameParser;
-import org.monarchinitiative.loinc2hpo.sparql.SparqlQuery;
+import org.monarchinitiative.loinc2hpo.io.loincparser.HPO_Class_Found;
+import org.monarchinitiative.loinc2hpo.io.loincparser.LoincLongNameComponents;
+import org.monarchinitiative.loinc2hpo.io.loincparser.LoincLongNameParser;
+import org.monarchinitiative.loinc2hpo.io.loincparser.SparqlQuery;
 import org.monarchinitiative.phenol.ontology.data.Term;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,7 +61,8 @@ public class AnnotateTabController {
 
     private final static String MISSINGVALUE = "NA";
 
-
+    @Autowired
+    OptionalResources optionalResources;
 
     @Autowired
     private Settings settings;
@@ -72,7 +72,7 @@ public class AnnotateTabController {
     /** Reference to the third tab. When the user adds a new annotation, we update the table, therefore, we need a reference. */
     @Autowired private Loinc2HpoAnnotationsTabController loinc2HpoAnnotationsTabController;
     @Autowired private Loinc2HpoMainController mainController;
-    private ImmutableMap<LoincId, LoincEntry> loincmap=null;
+    private Map<LoincId, LoincEntry> loincmap=null;
 
     //observable map for LOINC entries
     private final ObservableMap<LoincId, LoincEntry> loincMap = FXCollections.observableHashMap();
@@ -688,12 +688,8 @@ public class AnnotateTabController {
     }
 
     private void initLOINCtable() {
-
-        this.loincmap = ImmutableMap.<LoincId, LoincEntry>builder().build();
-            //    ImmutableMap.copyOf(appResources.getLoincEntryMap());
-        //int limit=Math.min(loincmap.size(),1000); // we will show just the first 1000 entries in the table.
-        //List<LoincEntry> lst = loincmap.values().asList().subList(0,limit);
-        List<LoincEntry> lst = loincmap.values().asList();
+        this.loincmap = optionalResources.getLoincTableMap();
+        List<LoincEntry> lst = new ArrayList<>(loincmap.values());
         loincTableView.getItems().clear(); // remove any previous entries
         loincTableView.getItems().addAll(lst);
         loincTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);

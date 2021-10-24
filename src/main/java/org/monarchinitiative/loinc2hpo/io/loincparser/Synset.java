@@ -1,4 +1,4 @@
-package org.monarchinitiative.loinc2hpo.sparql;
+package org.monarchinitiative.loinc2hpo.io.loincparser;
 
 import java.util.*;
 

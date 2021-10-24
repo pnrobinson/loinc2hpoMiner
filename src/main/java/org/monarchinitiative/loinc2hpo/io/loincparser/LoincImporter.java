@@ -1,4 +1,4 @@
-package org.monarchinitiative.loinc2hpo.sparql;
+package org.monarchinitiative.loinc2hpo.io.loincparser;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

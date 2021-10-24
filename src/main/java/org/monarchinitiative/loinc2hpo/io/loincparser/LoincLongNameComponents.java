@@ -1,12 +1,10 @@
-package org.monarchinitiative.loinc2hpo.sparql;
+package org.monarchinitiative.loinc2hpo.io.loincparser;
 
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * A class to represent a loinc code. The class is created by
@@ -34,7 +32,7 @@ public class LoincLongNameComponents {
     /** List of stop words and general words that we filter out of LOINC labels prior to text mining. */
     private static final Set<String> invalid_words =
             Set.of("mean", "in", "of", "identified", "cell", "conjugated", "other", "virus",
-                    "normal", "on", "total", "identified");
+                    "normal", "on", "total");
 
 
     public LoincLongNameComponents(String parameter, String tissue, String method, String type) {
@@ -42,7 +40,6 @@ public class LoincLongNameComponents {
         this.tissue = tissue;
         this.assayMethod = method;
         this.assayType = type;
-
     }
 
 

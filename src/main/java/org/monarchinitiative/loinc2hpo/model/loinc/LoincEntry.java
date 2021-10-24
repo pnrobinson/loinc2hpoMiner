@@ -4,9 +4,9 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.monarchinitiative.loinc2hpo.except.Loinc2HpoRunTimeException;
-import org.monarchinitiative.loinc2hpo.sparql.LoincImporter;
-import org.monarchinitiative.loinc2hpo.sparql.LoincLongNameComponents;
-import org.monarchinitiative.loinc2hpo.sparql.LoincLongNameParser;
+import org.monarchinitiative.loinc2hpo.io.loincparser.LoincImporter;
+import org.monarchinitiative.loinc2hpo.io.loincparser.LoincLongNameComponents;
+import org.monarchinitiative.loinc2hpo.io.loincparser.LoincLongNameParser;
 
 
 import java.io.BufferedReader;
