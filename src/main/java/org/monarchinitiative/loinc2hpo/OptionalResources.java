@@ -89,7 +89,7 @@ public class OptionalResources {
         return biocurator;
     }
 
-    public String getLoincCoreTable() {
+    public String getLoincCoreTablePath() {
         return loincCoreTable.get();
     }
 

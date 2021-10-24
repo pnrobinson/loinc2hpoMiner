@@ -19,20 +19,16 @@ import java.util.Properties;
 
 /**
  * Initialization of the GUI resources is being done here. Information from {@link Properties} parsed from
- * <code>hpo-case-annotator.properties</code> are being read and following resources are initialized:
- * <ul>
- * <li>Human phenotype ontology OBO file</li>
- * </ul>
- * <p>
- * Changes made by user are stored for the next run in
- * stop() method.
+ * the Project settings that are stored in the user home directory entry for this application.
+ * Changes made by user are stored for the next run in the stop() method. We place the Ontology, the
+ * Loinc Table, and the annotation file path in the OptionalResourses object if we can.
  *
  * @author <a href="mailto:daniel.danis@jax.org">Daniel Danis</a>
- * @version 0.0.2
+ * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
+ * @version 0.0.3
  * @since 0.0
  */
 public final class StartupTask extends Task<Void> {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(StartupTask.class);
 
     private final OptionalResources optionalResources;
@@ -62,13 +58,14 @@ public final class StartupTask extends Task<Void> {
         This way we ensure that GUI elements dependent on ontology presence (labels, buttons) stay disabled
         and that the user will be notified about the fact that the ontology is missing.
          */
-        ingestOntology(optionalResources.getHpoJsonPath());
-        ingestLoincTable(optionalResources.getLoincCoreTable());
+        ingestOntology();
+        ingestLoincTable();
         return null;
     }
 
 
-    private void ingestLoincTable(String loincTablePath) {
+    private void ingestLoincTable() {
+        String loincTablePath = optionalResources.getLoincCoreTablePath();
         Map<LoincId, LoincEntry> loincMap = new HashMap<>();
         int count_malformed = 0;
         int count_correct = 0;
@@ -104,7 +101,8 @@ public final class StartupTask extends Task<Void> {
      * Load the HPO using phenol and set the corresponding fields in OptionalResources
      * @param ontologyPath path to hp.json file
      */
-    private void ingestOntology(String ontologyPath) {
+    private void ingestOntology() {
+        String ontologyPath = optionalResources.getHpoJsonPath();
         if (ontologyPath != null) {
             final File hpJsonFile = new File(ontologyPath);
             if (hpJsonFile.isFile()) {

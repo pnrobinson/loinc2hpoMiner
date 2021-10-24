@@ -55,9 +55,7 @@ public class LoincEntry {
         scale=F.get(5);
         method=F.get(6);
         longName=F.get(9);
-
         this.longNameComponents = LoincLongNameParser.parse(longName);
-
     }
 
 
@@ -128,5 +126,9 @@ public class LoincEntry {
         return this.LOINC_Number.hashCode();
     }
 
+    @Override
+    public String toString() {
+        return String.format("LoincEntry: %s (%s)",this.LOINC_Number, this.longName);
+    }
 
 }

@@ -86,7 +86,7 @@ public class SettingsViewFactory {
         vbox.getChildren().addAll(wview,hbox);
 
 
-        Scene scene = new Scene(pane, 800, 600);
+        Scene scene = new Scene(pane, 1200, 600);
         String css = SettingsViewFactory.class.getResource("/css/loinc2hpo.css").toExternalForm();
         scene.getStylesheets().add(css);
         window.setScene(scene);

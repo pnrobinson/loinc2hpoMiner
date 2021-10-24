@@ -1,5 +1,7 @@
 package org.monarchinitiative.loinc2hpo.io.loincparser;
 
+import org.monarchinitiative.phenol.ontology.data.Term;
+
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.regex.Matcher;
@@ -12,7 +14,7 @@ import java.util.regex.Pattern;
  * the HPO class. The class is comparable by the scores it receives from
  * keyword matching (from the loinc code used for query and the HPO class).
  */
-public class HPO_Class_Found implements Comparable<HPO_Class_Found> {
+public class HpoClassFound implements Comparable<HpoClassFound> {
 
     private String id; //uri of HPO class. Actual id is the last
     // (split by '/') in the form of HP_12345
@@ -22,11 +24,23 @@ public class HPO_Class_Found implements Comparable<HPO_Class_Found> {
     private int score; //how well the HPO class matches the loinc code (long
                         // common name)
 
-    public HPO_Class_Found(String id, String label, String definition, LoincLongNameComponents loinc) {
+    public HpoClassFound(String id, String label, String definition, LoincLongNameComponents loinc) {
         this.id = id;
         this.label = label;
         this.definition = definition;
         this.loinc = loinc;
+        if (loinc != null) {
+            this.score = calculatePriority();
+        } else {
+            this.score = -999;
+        }
+    }
+
+    public HpoClassFound(Term term, LoincLongNameComponents loincLongNameComponents) {
+        this.id = term.getId().getValue();
+        this.label = term.getName();
+        this.definition = term.getDefinition();
+        this.loinc = loincLongNameComponents;
         if (loinc != null) {
             this.score = calculatePriority();
         } else {
@@ -52,7 +66,7 @@ public class HPO_Class_Found implements Comparable<HPO_Class_Found> {
         if (this.definition != null)
             total += (" " + this.definition);
 
-        Pattern pattern = Pattern.compile(toPattern(SparqlQuery.modifier));
+        Pattern pattern = Pattern.compile(toPattern(LoincVsHpoQuery.modifier));
         Matcher matcher = pattern.matcher(total.toLowerCase());
         if (matcher.matches()) { //test whether the class has modifier
             matchScore += 50;
@@ -122,7 +136,7 @@ public class HPO_Class_Found implements Comparable<HPO_Class_Found> {
     public int getScore() { return this.score; }
 
     @Override
-    public int compareTo(HPO_Class_Found other) {
+    public int compareTo(HpoClassFound other) {
         if (other != null) {
             return this.score - other.score;
         } else {
