@@ -3,7 +3,6 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Accordion?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.ContextMenu?>
 <?import javafx.scene.control.Label?>
@@ -18,7 +17,6 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
-<?import javafx.scene.control.TreeView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -27,7 +25,6 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 
 <BorderPane fx:id="boardPane" minHeight="900.0" minWidth="1200.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.monarchinitiative.loinc2hpo.Loinc2HpoMainController">
    <top>
@@ -93,66 +90,6 @@
                                <Insets bottom="10.0" left="20.0" top="40.0" />
                            </HBox.margin>
                        </Label>
-                       <GridPane alignment="CENTER" HBox.hgrow="SOMETIMES">
-                           <columnConstraints>
-                               <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" minWidth="10.0" />
-                               <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" minWidth="10.0" />
-                               <ColumnConstraints halignment="CENTER" hgrow="SOMETIMES" minWidth="10.0" />
-                               <ColumnConstraints halignment="CENTER" hgrow="NEVER" minWidth="10.0" />
-                           </columnConstraints>
-                           <rowConstraints>
-                               <RowConstraints valignment="CENTER" />
-                               <RowConstraints valignment="CENTER" />
-                               <RowConstraints valignment="CENTER" />
-                           </rowConstraints>
-                           <HBox.margin>
-                               <Insets />
-                           </HBox.margin>
-                           <Label fx:id="annotationLeftLabel" prefHeight="30.0" text="&lt;Low threshold" textFill="#0e1ccf" GridPane.halignment="CENTER">
-                               <font>
-                                   <Font name="System Bold" size="13.0" />
-                               </font>
-                               <padding>
-                                   <Insets top="10.0" />
-                               </padding>
-                           </Label>
-                           <Label fx:id="annotationMiddleLabel" prefHeight="30.0" text="normal" GridPane.columnIndex="1" GridPane.halignment="CENTER" />
-                           <Label fx:id="annotationRightLabel" text="&gt;High threshold" textFill="#c71010" GridPane.columnIndex="2" GridPane.halignment="CENTER">
-                               <font>
-                                   <Font name="System Bold" size="13.0" />
-                               </font>
-                           </Label>
-                           <TextField fx:id="annotationTextFieldLeft" onDragDropped="#handleHPOLowAbnormality" onDragEntered="#handleDragEnterLowAbnorm" onDragExited="#handleDragExitLowAbnorm" promptText="phenotype for too low" GridPane.rowIndex="1">
-                               <GridPane.margin>
-                                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                               </GridPane.margin>
-                           </TextField>
-                           <TextField fx:id="annotationTextFieldMiddle" onDragDropped="#handleParentAbnormality" onDragEntered="#handleDragEnterParentAbnorm" onDragExited="#handleDragExitParentAbnorm" promptText="parent phenotype" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                               <GridPane.margin>
-                                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                               </GridPane.margin>
-                           </TextField>
-                           <TextField fx:id="annotationTextFieldRight" onDragDropped="#handleHPOHighAbnormality" onDragEntered="#handleDragEnterHighAbnorm" onDragExited="#handleDragExitHighAbnorm" promptText="phenotype for too high" GridPane.columnIndex="2" GridPane.rowIndex="1">
-                               <GridPane.margin>
-                                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                               </GridPane.margin>
-                           </TextField>
-                           <CheckBox fx:id="inverseChecker" mnemonicParsing="false" selected="true" text="negate" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="2">
-                               <padding>
-                                   <Insets left="9.0" />
-                               </padding>
-                           </CheckBox>
-                           <Button fx:id="modeButton" mnemonicParsing="false" onAction="#annotationModeSwitchButton" stylesheets="@../css/loinc2hpo.css" text="advanced &gt;&gt;&gt;" GridPane.columnIndex="2" GridPane.rowIndex="2">
-                               <GridPane.margin>
-                                   <Insets />
-                               </GridPane.margin>
-                           </Button>
-                           <Button fx:id="addCodedAnnotationButton" mnemonicParsing="false" onAction="#handleAnnotateCodedValue" stylesheets="@../css/loinc2hpo.css" text="+" GridPane.columnIndex="3">
-                               <GridPane.margin>
-                                   <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                               </GridPane.margin>
-                           </Button>
-                       </GridPane>
                    </HBox>
                    <GridPane>
                        <columnConstraints>
@@ -195,6 +132,11 @@
                                <items>
                                    <MenuItem mnemonicParsing="false" onAction="#getParentHpoTerms" text="get parent term(s)" />
                                    <MenuItem mnemonicParsing="false" onAction="#getChildHpoTerms" text="get child terms" />
+                                   <MenuItem mnemonicParsing="false" onAction="#addQnLowTerm" text="Qn Low" />
+                                   <MenuItem mnemonicParsing="false" onAction="#addQnHighTerm" text="Qn High" />
+                                   <MenuItem mnemonicParsing="false" onAction="#addNormalTerm" text="Normal" />
+                                   <MenuItem mnemonicParsing="false" onAction="#addOrdAbnormal" text="Ord Abnormal" />
+                                   <MenuItem mnemonicParsing="false" onAction="#addNominalTerm" text="Nominal" />
                                </items>
                            </ContextMenu>
                        </contextMenu>
@@ -228,25 +170,34 @@
                        <VBox.margin>
                            <Insets left="20.0" top="5.0" />
                        </VBox.margin>
-                       <Button fx:id="createAnnotationButton" mnemonicParsing="false" onAction="#createLoinc2HpoAnnotation" stylesheets="@../css/loinc2hpo.css" text="Create annotation" />
-                       <Button fx:id="clearButton" mnemonicParsing="false" onAction="#handleClear" stylesheets="@../css/loinc2hpo.css" text="Clear" />
-                       <Button fx:id="allAnnotationsButton" mnemonicParsing="false" onAction="#showAllAnnotations" stylesheets="@../css/loinc2hpo.css" text="All annotations">
+                       <Button fx:id="createAnnotationButton" mnemonicParsing="false" onAction="#createQnAnnotation" stylesheets="@../css/loinc2hpo.css" text="Qn" />
+                       <Button fx:id="allAnnotationsButton" mnemonicParsing="false" onAction="#createOrdAnnotation" stylesheets="@../css/loinc2hpo.css" text="Ord"/>
+                       <Button fx:id="nominalAnnoationButton" mnemonicParsing="false" onAction="#createNomAnnotation" stylesheets="@../css/loinc2hpo.css" text="Nom"/>
+                       <Button fx:id="clearButton" mnemonicParsing="false" onAction="#handleClear" stylesheets="@../css/loinc2hpo.css" text="Clear" >
                            <HBox.margin>
-                               <Insets left="50.0" />
+                               <Insets left="40.0" />
                            </HBox.margin>
-                           <!--  <fx:include source="currentAnnotation.fxml"/> -->
                        </Button>
                    </HBox>
-                   <TextArea fx:id="annotationNoteField" promptText="Optional: note for annotation" wrapText="true" VBox.vgrow="NEVER">
+                   <TextArea fx:id="annotationNoteField" maxHeight="60.0" promptText="Optional: note for annotation" wrapText="true" VBox.vgrow="NEVER">
                        <VBox.margin>
                            <Insets left="20.0" right="20.0" top="20.0" />
                        </VBox.margin>
                    </TextArea>
-                   <TreeView fx:id="treeView" onContextMenuRequested="#getContextMenu4TreeView" onDragDetected="#handleDragInTreeView" onMouseClicked="#doubleClickTreeView" VBox.vgrow="ALWAYS">
-                       <VBox.margin>
-                           <Insets bottom="10.0" left="20.0" right="20.0" top="20.0" />
-                       </VBox.margin>
-                   </TreeView>
+               <AnchorPane prefHeight="429.0" prefWidth="504.0">
+                  <children>
+                     <TableView fx:id="hpoAnnotationTable" prefHeight="430.0" prefWidth="431.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                       <columns>
+                         <TableColumn fx:id="hpoAnnotationType" prefWidth="75.0" resizable="false" text="Type" />
+                         <TableColumn fx:id="hpoAnnotationTid" prefWidth="75.0" resizable="false" text="TermId" />
+                           <TableColumn fx:id="hpoAnnotationTermLabel" prefWidth="280.0" resizable="false" text="Label" />
+                       </columns>
+                        <padding>
+                           <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
+                        </padding>
+                     </TableView>
+                  </children>
+               </AnchorPane>
                </VBox>
            </SplitPane>
            <Accordion fx:id="accordion">

@@ -24,4 +24,8 @@ public class InternalCodeSystem {
         return internalCodeMap.get(internalCode);
     }
 
+    public static Code abnormal() {
+        return internalCodeMap.get(InternalCode.A);
+    }
+
 }

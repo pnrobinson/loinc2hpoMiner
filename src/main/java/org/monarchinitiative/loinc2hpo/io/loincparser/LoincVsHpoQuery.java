@@ -6,12 +6,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 public class LoincVsHpoQuery {
     private static final Logger LOGGER = LoggerFactory.getLogger(LoincVsHpoQuery.class);
 
     private final Ontology hpo;
+    /** Do not try to match on these words in LOINC labels. */
+    private final static Set<String> omitWords = Set.of("in", "or", "and", "Serum", "Plasma", "Dose", "Blood");
 
 
     public static final String modifier = "increase.*|decrease.*|elevat.*|reduc.*|high.*|low.*|above|below|abnormal.*";
@@ -42,6 +45,7 @@ public class LoincVsHpoQuery {
             searchItems.add(loincLongNameComponents.getLoincMethod());
             searchItems.add(loincLongNameComponents.getLoincParameter());
             searchItems.add(loincLongNameComponents.getLoincType());
+            searchItems = searchItems.stream().filter(s -> ! omitWords.contains(s)).collect(Collectors.toList());
             LOGGER.info("got {} search items",searchItems.size());
             for (Term term : hpo.getTermMap().values()) {
                 Set<String> words = getWords(term);

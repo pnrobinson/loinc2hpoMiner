@@ -277,7 +277,6 @@ public class Loinc2HpoAnnotationModel {
      */
     @Override
     public String toString(){
-
         StringBuilder stringBuilder = new StringBuilder();
         candidateHpoTerms.forEach((code, hpoTermId4LoincTest) -> {
             stringBuilder.append(this.loincId);
@@ -296,7 +295,6 @@ public class Loinc2HpoAnnotationModel {
             stringBuilder.append("\n");
         });
         return stringBuilder.toString().trim();
-
     }
 
     // The following define some convenient methods
@@ -306,7 +304,6 @@ public class Loinc2HpoAnnotationModel {
      * @return
      */
     public TermId whenValueLow() {
-
         if (loincInterpretationToHPO(InternalCodeSystem.getCode(InternalCode.L)) != null) {
             return loincInterpretationToHPO(InternalCodeSystem.getCode(InternalCode.L)).getId();
         } else {
@@ -319,7 +316,6 @@ public class Loinc2HpoAnnotationModel {
      * @return
      */
     public TermId whenValueNormalOrNegative() {
-
         if (loincInterpretationToHPO(InternalCodeSystem.getCode(InternalCode.N)) != null) {
             return loincInterpretationToHPO(InternalCodeSystem.getCode(InternalCode.N)).getId();
         } else if (loincInterpretationToHPO(InternalCodeSystem.getCode(InternalCode.NEG)) != null) {
@@ -327,7 +323,6 @@ public class Loinc2HpoAnnotationModel {
         } else {
             return null;
         }
-
     }
 
 
@@ -336,7 +331,6 @@ public class Loinc2HpoAnnotationModel {
      * @return
      */
     public TermId whenValueHighOrPositive() {
-
         if (loincInterpretationToHPO(InternalCodeSystem.getCode(InternalCode.H)) != null) {
             return loincInterpretationToHPO(InternalCodeSystem.getCode(InternalCode.H)).getId();
         } else if (loincInterpretationToHPO(InternalCodeSystem.getCode(InternalCode.POS)) != null) {
@@ -344,7 +338,6 @@ public class Loinc2HpoAnnotationModel {
         } else {
             return null;
         }
-
     }
 
 
@@ -370,10 +363,8 @@ public class Loinc2HpoAnnotationModel {
          * @param loincId
          */
         public Builder setLoincId(LoincId loincId) {
-
             this.loincId = loincId;
             return this;
-
         }
 
         /**
@@ -381,10 +372,8 @@ public class Loinc2HpoAnnotationModel {
          * @param loincScale
          */
         public Builder setLoincScale(LoincScale loincScale) {
-
             this.loincScale = loincScale;
             return this;
-
         }
 
         /**
@@ -392,23 +381,19 @@ public class Loinc2HpoAnnotationModel {
          * @param low
          */
         public Builder setLowValueHpoTerm(@NotNull TermId low) {
-
             Code internalLow = InternalCodeSystem.getCode(InternalCode.L);
             return addAnnotation(internalLow, new HpoTerm4TestOutcome(low,
                     false));
-
         }
 
         /**
          * Set the HPO term when the measured value is intermediate (typically "normal")
          * @param intermediate
          */
-        public Builder setIntermediateValueHpoTerm(@NotNull TermId intermediate, boolean isNegated) {
-
+        public Builder setNormalHpoTerm(@NotNull TermId intermediate, boolean isNegated) {
             Code internalNormal = InternalCodeSystem.getCode(InternalCode.N);
             return addAnnotation(internalNormal,
                     new HpoTerm4TestOutcome(intermediate, isNegated));
-
         }
 
         /**
@@ -416,28 +401,22 @@ public class Loinc2HpoAnnotationModel {
          * @param high
          */
         public Builder setHighValueHpoTerm(@NotNull TermId high) {
-
             Code internalHigh = InternalCodeSystem.getCode(InternalCode.H);
             return addAnnotation(internalHigh, new HpoTerm4TestOutcome(high,
                     false));
-
         }
 
         public Builder setPosValueHpoTerm(@NotNull TermId pos) {
-
             Code internalPos = InternalCodeSystem.getCode(InternalCode.POS);
             return addAnnotation(internalPos, new HpoTerm4TestOutcome(pos,
                     false));
-
         }
 
         public Builder setNegValueHpoTerm(@NotNull TermId neg,
                                           boolean inverse) {
-
             Code internalNeg = InternalCodeSystem.getCode(InternalCode.NEG);
             return addAnnotation(internalNeg, new HpoTerm4TestOutcome(neg,
                     inverse));
-
         }
 
         /**
@@ -447,10 +426,8 @@ public class Loinc2HpoAnnotationModel {
          * @return
          */
         public Builder addAnnotation(Code code, HpoTerm4TestOutcome annotation) {
-
             this.annotationMap.put(code, annotation);
             return this;
-
         }
 
         /**
@@ -458,10 +435,8 @@ public class Loinc2HpoAnnotationModel {
          * @param createdOn
          */
         public Builder setCreatedOn(LocalDateTime createdOn) {
-
             this.createdOn = createdOn;
             return this;
-
         }
 
         /**
@@ -469,10 +444,8 @@ public class Loinc2HpoAnnotationModel {
          * @param biocurator
          */
         public Builder setCreatedBy(String biocurator) {
-
             this.createdBy = biocurator;
             return this;
-
         }
 
         /**
@@ -480,10 +453,8 @@ public class Loinc2HpoAnnotationModel {
          * @param lastEditedOn
          */
         public Builder setLastEditedOn(LocalDateTime lastEditedOn) {
-
             this.lastEditedOn = lastEditedOn;
             return this;
-
         }
 
         /**
@@ -491,10 +462,8 @@ public class Loinc2HpoAnnotationModel {
          * @param biocurator
          */
         public Builder setLastEditedBy(String biocurator) {
-
             this.lastEditedBy = biocurator;
             return this;
-
         }
 
         /**
@@ -503,10 +472,8 @@ public class Loinc2HpoAnnotationModel {
          * @return the annotation object
          */
         public Builder setNote(String note) {
-
             this.note = note;
             return this;
-
         }
 
         /**
@@ -515,10 +482,8 @@ public class Loinc2HpoAnnotationModel {
          * @return the annotation object
          */
         public Builder setFlag(boolean flag) {
-
             this.flag = flag;
             return this;
-
         }
 
         /**
@@ -527,10 +492,8 @@ public class Loinc2HpoAnnotationModel {
          * @return
          */
         public Builder setVersion(double version) {
-
             this.version = version;
             return this;
-
         }
 
         public Loinc2HpoAnnotationModel build() {
