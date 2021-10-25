@@ -117,7 +117,7 @@
                                    <Insets top="10.0" />
                                </padding>
                            </Label>
-                           <Label fx:id="annotationMiddleLabel" prefHeight="30.0" text="intermediant" GridPane.columnIndex="1" GridPane.halignment="CENTER" />
+                           <Label fx:id="annotationMiddleLabel" prefHeight="30.0" text="normal" GridPane.columnIndex="1" GridPane.halignment="CENTER" />
                            <Label fx:id="annotationRightLabel" text="&gt;High threshold" textFill="#c71010" GridPane.columnIndex="2" GridPane.halignment="CENTER">
                                <font>
                                    <Font name="System Bold" size="13.0" />
@@ -190,7 +190,10 @@
                            </GridPane.margin>
                        </Label>
                    </GridPane>
-                   <ListView fx:id="hpoListView" onDragDetected="#handleCandidateHPODragged" onMouseClicked="#handleCandidateHPODoubleClick" VBox.vgrow="ALWAYS">
+                   <ListView fx:id="hpoListView"
+                             onDragDetected="#handleCandidateHPODragged"
+                             onMouseClicked="#handleCandidateHPODoubleClick"
+                             VBox.vgrow="ALWAYS">
                        <contextMenu>
                            <ContextMenu fx:id="contextMenu">
                                <items>
@@ -207,7 +210,7 @@
                        <VBox.margin>
                            <Insets />
                        </VBox.margin>
-                       <Button fx:id="autoQueryButton" mnemonicParsing="false" onAction="#handleAutoQueryButton" stylesheets="@../css/loinc2hpo.css" text="Auto Query">
+                       <Button fx:id="autoQueryButton" mnemonicParsing="false" onAction="#searchHpoTermButtonClicked" stylesheets="@../css/loinc2hpo.css" text="Search HPO terms">
                            <HBox.margin>
                                <Insets bottom="5.0" left="20.0" top="10.0" />
                            </HBox.margin>
@@ -217,7 +220,7 @@
                                <Insets bottom="5.0" left="20.0" top="10.0" />
                            </HBox.margin>
                        </TextField>
-                       <Button fx:id="suggestHPOButton" mnemonicParsing="false" onAction="#suggestNewTerm" prefWidth="190.0" stylesheets="@../css/loinc2hpo.css" text="Suggest New HPO term">
+                       <Button fx:id="hpoDescendantsButton" mnemonicParsing="false" onAction="#descendantsOfMarkedTerm" prefWidth="190.0" stylesheets="@../css/loinc2hpo.css" text="descendants of marked term ">
                            <HBox.margin>
                                <Insets left="5.0" right="5.0" top="10.0" />
                            </HBox.margin>

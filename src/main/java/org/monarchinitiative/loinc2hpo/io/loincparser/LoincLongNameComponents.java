@@ -148,10 +148,8 @@ public class LoincLongNameComponents {
             return false;
         } else if (invalid_words.contains(word.toLowerCase())) {
             return false;
-        } else if (integerPredicate.test(word)) {
-            return false;
         } else {
-            return true;
+            return !integerPredicate.test(word);
         }
     }
 }

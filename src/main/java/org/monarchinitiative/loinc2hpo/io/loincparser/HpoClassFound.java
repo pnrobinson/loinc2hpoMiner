@@ -20,8 +20,8 @@ public class HpoClassFound implements Comparable<HpoClassFound> {
     // (split by '/') in the form of HP_12345
     private String label; //all classes should have a non-null label
     private String definition; //some classes do not have a definition
-    private LoincLongNameComponents loinc; //We found this HPO class with this loinc query
-    private int score; //how well the HPO class matches the loinc code (long
+    private final LoincLongNameComponents loinc; //We found this HPO class with this loinc query
+    private final int score; //how well the HPO class matches the loinc code (long
                         // common name)
 
     public HpoClassFound(String id, String label, String definition, LoincLongNameComponents loinc) {

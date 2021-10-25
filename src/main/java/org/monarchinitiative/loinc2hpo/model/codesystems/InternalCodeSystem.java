@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class InternalCodeSystem {
     public static final String SYSTEMNAME = "FHIR";
-    private static Map<InternalCode, Code> internalCodeMap;
+    private static final Map<InternalCode, Code> internalCodeMap;
 
     static {
         internalCodeMap = new HashMap<>();

@@ -21,7 +21,11 @@ public class LoincVsHpoQuery {
     }
 
 
-
+    public List<HpoClassFound> query_manual(String keysString,
+                                            LoincLongNameComponents loincLongNameComponents) {
+        String [] keys = keysString.split(" ");
+        return query_manual(List.of(keys), loincLongNameComponents);
+    }
     /**
      * A method to do manual query with provided keys (literally)
      */
@@ -38,6 +42,7 @@ public class LoincVsHpoQuery {
             searchItems.add(loincLongNameComponents.getLoincMethod());
             searchItems.add(loincLongNameComponents.getLoincParameter());
             searchItems.add(loincLongNameComponents.getLoincType());
+            LOGGER.info("got {} search items",searchItems.size());
             for (Term term : hpo.getTermMap().values()) {
                 Set<String> words = getWords(term);
                 for (var word : searchItems) {
@@ -47,6 +52,7 @@ public class LoincVsHpoQuery {
                     }
                 }
             }
+            LOGGER.info("got {} found items",foundList.size());
             return foundList;
         }
     }
@@ -58,7 +64,7 @@ public class LoincVsHpoQuery {
         words.addAll(List.of(labelWords));
         for (var synonym: term.getSynonyms()) {
             String synonymLabel = synonym.getValue();
-            System.out.println(synonymLabel);
+            //System.out.println(synonymLabel);
             String [] synonymWords = synonymLabel.split("\s+");
             words.addAll(List.of(synonymWords));
         }

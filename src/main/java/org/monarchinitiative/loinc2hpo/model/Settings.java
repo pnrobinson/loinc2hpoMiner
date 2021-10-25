@@ -71,16 +71,18 @@ public class Settings {
             key=line.substring(0,idx).trim();
             value=line.substring(idx+1).trim();
 
-            if (key.equals("biocuratorid")) settings.setBiocuratorID(value);
-            else if (key.equals("loincTablePath")) settings.setLoincCoreTablePath(value);
-            else if (key.equals("hp-json")) settings.setHpoJsonPath(value);
-            else if (key.equals("autosave to")) settings.setAnnotationFile(value);
-            else if (key.equals("loinc-list-color")) {
-                String[] entries = value.split("\\|");
-                settings.setUserCreatedLoincListsColor(
-                        Arrays.stream(entries)
-                        .map(e -> e.split(",")) //has to be two elements
-                        .collect(Collectors.toMap(e -> e[0], e -> e[1])));
+            switch (key) {
+                case "biocuratorid" -> settings.setBiocuratorID(value);
+                case "loincTablePath" -> settings.setLoincCoreTablePath(value);
+                case "hp-json" -> settings.setHpoJsonPath(value);
+                case "autosave to" -> settings.setAnnotationFile(value);
+                case "loinc-list-color" -> {
+                    String[] entries = value.split("\\|");
+                    settings.setUserCreatedLoincListsColor(
+                            Arrays.stream(entries)
+                                    .map(e -> e.split(",")) //has to be two elements
+                                    .collect(Collectors.toMap(e -> e[0], e -> e[1])));
+                }
             }
         }
         br.close();

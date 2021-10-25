@@ -5,6 +5,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import org.monarchinitiative.loinc2hpo.io.loincparser.LoincVsHpoQuery;
 import org.monarchinitiative.loinc2hpo.model.Loinc2HpoAnnotationModel;
 import org.monarchinitiative.loinc2hpo.model.Settings;
 import org.monarchinitiative.loinc2hpo.model.loinc.LoincEntry;
@@ -132,6 +133,16 @@ public class OptionalResources {
         }
         return this.loincAnnotationMap;
     }
+    private LoincVsHpoQuery loincVsHpoQuery = null;
+
+    public LoincVsHpoQuery getLoincVsHpoQuery(){
+        if (loincVsHpoQuery == null) {
+            loincVsHpoQuery = new LoincVsHpoQuery(ontologyProperty().get());
+        }
+        return this.loincVsHpoQuery;
+    }
+
+
 
 
 }

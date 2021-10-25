@@ -271,10 +271,11 @@ public class Loinc2HpoAnnotationModel {
     }
 
 
-    @Override
+
     /**
      * The default toString method will serialize all the annotations to a string
      */
+    @Override
     public String toString(){
 
         StringBuilder stringBuilder = new StringBuilder();
