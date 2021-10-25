@@ -18,12 +18,11 @@ public class SettingsViewFactory extends AbstractWebviewFactory {
 
     @Override
     String getHTML() {
-        String sb = "<html><body>\n" +
+        return "<html><body>\n" +
                 inlineCSS() +
-                "<h1>LOINC2HPO Biocuration App Setting</h1>" +
+                "<h1>LOINC2HPO Biocuration Settings</h1>" +
                 settingsList() +
                 "</body></html>";
-        return sb;
     }
 
     private String settingsList() {

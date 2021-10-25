@@ -676,7 +676,7 @@ public class Loinc2HpoMainController {
             alert.show();
             Task<Void> task = new Task<>() {
                 @Override
-                protected Void call() throws Exception {
+                protected Void call() {
                     try {
                         Thread.sleep(1500);
                     } catch (InterruptedException e) {
@@ -1550,9 +1550,11 @@ public class Loinc2HpoMainController {
         if (!currentAnnotationModel.validOrdAnnotation()) {
             String errorMsg;
             if (normal == null) {
-                errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"normal\" term was null");
+                errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"normal\" term was null",
+                        loincScale.name());
             } else if (abn == null) {
-                errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"abnormal\" term was null");
+                errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"abnormal\" term was null",
+                        loincScale.name());
             } else {
                 errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; normal %s, abnormal: %s",
                         loincScale.name(), normal.getName(), abn.getName());
@@ -1605,11 +1607,14 @@ public class Loinc2HpoMainController {
        if (!currentAnnotationModel.validQnAnnotation()) {
            String errorMsg;
            if (normal == null) {
-               errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"normal\" term was null");
+               errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"normal\" term was null",
+                       loincScale.name());
            } else if (low == null) {
-               errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"low\" term was null");
+               errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"low\" term was null",
+                       loincScale.name());
            } else if (high == null) {
-               errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"high\" term was null");
+               errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"high\" term was null",
+                       loincScale.name());
            } else {
                errorMsg = String.format("Invalid Qn annotation. LOINC type: %s; low: %s, normal %s, high: %s",
                        loincScale.name(), low.getName(), normal.getName(), high.getName());
@@ -1638,7 +1643,8 @@ public class Loinc2HpoMainController {
 
     private void addAnnotationAndUpdateGui(LoincId loincCode, Loinc2HpoAnnotationModel annotation) {
         optionalResources.getLoincAnnotationMap().put(loincCode, annotation);
-        LoincAnnotationCreatedViewFactory factory = new LoincAnnotationCreatedViewFactory(loincCode, annotation);
+        LoincAnnotationCreatedViewFactory factory =
+                new LoincAnnotationCreatedViewFactory(optionalResources.getOntology(), annotation);
         factory.openDialog();
         annotationNoteField.clear();
         loincTableEnableMultiSelection.setSelected(false);
@@ -1882,7 +1888,7 @@ public class Loinc2HpoMainController {
     /**
      * The function determines whether the data in annotations map and loincCategories has changed
      *
-     * @return
+     * @return true if session data has not been saved yet
      */
     public boolean isSessionDataChanged() {
         //Lazy implementation
