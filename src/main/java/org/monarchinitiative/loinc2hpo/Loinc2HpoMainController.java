@@ -127,10 +127,6 @@ public class Loinc2HpoMainController {
     private final ObservableList<AdvancedAnnotationTableComponent> tempAdvancedAnnotations = FXCollections.observableArrayList();
 
     @FXML
-    private TreeView<HpoTreeView> treeView;
-
-
-    @FXML
     private TextArea annotationNoteField;
     @FXML
     private Button clearButton;
@@ -340,27 +336,6 @@ public class Loinc2HpoMainController {
                                     }
                                     List<String> malformed = new ArrayList<>();
                                     List<String> notFound = new ArrayList<>();
-                                 /*
-                                try {
-
-                                    LoincOfInterest loincSet = new LoincOfInterest(f.getAbsolutePath());
-                                    Set<String> loincIds = loincSet.getLoincOfInterest();
-                                    loincIds.forEach(l -> {
-                                        LoincId loincId = null;
-                                        try {
-                                            loincId = new LoincId(l);
-                                        } catch (Exception e) {
-                                            malformed.add(l);
-                                        }
-
-                                        changeColorLoincTableView();
-
-                                    });
-
-
-                                } catch (FileNotFoundException e) {
-                                    logger.error("File not found. Should never happen");
-                                }  */
                                     if (!malformed.isEmpty() || !notFound.isEmpty()) {
                                         String malformedString = String.join("\n", malformed);
                                         String notFoundString = String.join("\n", notFound);
@@ -576,63 +551,17 @@ public class Loinc2HpoMainController {
         }
         LOGGER.info(String.format("Start auto query for \"%s\"by pressing button", entry));
         updateHpoTermListView(entry);
-//        if (appTempData.getLoincUnderEditing() == null || //not under Editing mode
-//                //or query the loinc code under editing
-//                (appTempData.getLoincUnderEditing() != null && appTempData.getLoincUnderEditing().equals(entry))) {
-//
-//        } else {
-//            PopUps.showInfoMessage("You are currently editing " + appTempData.getLoincUnderEditing().getLOINC_Number() +
-//                            ". Save or cancel editing current loinc annotation before switching to others",
-//                    "Under Editing mode");
-//            return;
-//        }
-
-/*
-        //clear text in abnormality text fields if not currently editing a term
-        if (!createAnnotationButton.getText().equals("Save")) {
-            clearAbnormalityTextField();
-            //inialize the flag field
-            flagForAnnotation.setIndeterminate(false);
-            flagForAnnotation.setSelected(false);
-            createAnnotationSuccess.setFill(Color.WHITE);
-            annotationNoteField.setText("");
-        }
-
- */
     }
 
     @FXML
     private void handleManualQueryButton(ActionEvent e) {
 
         e.consume();
-//        if(SparqlQuery.model == null) {
-//            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-//            alert.setTitle("HPO AppTempData Undefined");
-//            alert.setHeaderText("Create HPO appTempData first before querying");
-//            alert.setContentText("Click \"Initialize HPO appTempData\" to create an" +
-//                    " HPO appTempData for Sparql query. Click and query again.");
-//            alert.showAndWait();
-//            return;
-//        }
-
-        //for now, force user choose a loinc entry. TODO: user may or may not
-        // choose a loinc term.
         LoincEntry entry = loincTableView.getSelectionModel().getSelectedItem();
         if (entry == null) {
-            //noLoincEntryAlert();
+            noLoincEntryAlert();
             return;
         }
-
-
-//        if (appTempData.getLoincUnderEditing() != null && !appTempData.getLoincUnderEditing().equals(entry)) {
-//
-//            PopUps.showInfoMessage("You are currently editing " + appTempData.getLoincUnderEditing().getLOINC_Number() +
-//                            ". Save or cancel editing current loinc annotation before switching to others",
-//                    "Under Editing mode");
-//            return;
-//        }
-
-
         String userInput = userInputForManualQuery.getText();
         if (userInput == null || userInput.trim().length() < 2) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -1013,38 +942,6 @@ public class Loinc2HpoMainController {
     }
 
 
-    /**
-     * private class for showing HPO class in treeview.
-     * Another reason to have this is to facilitate drag and draw from treeview.
-     */
-    private static class HpoTreeView {
-        private final HpoClassFound hpo_class_found;
-
-        private HpoTreeView() {
-            this.hpo_class_found = null;
-        }
-
-        private HpoTreeView(HpoClassFound hpo_class_found) {
-            this.hpo_class_found = hpo_class_found;
-        }
-
-        HpoClassFound getHpo_class_found() {
-            return this.hpo_class_found;
-        }
-
-        @Override
-        public String toString() {
-            if (this.hpo_class_found == null) {
-                return "root";
-            }
-            String stringRepretation = "";
-            String[] id_words = this.hpo_class_found.getId().split("/");
-            stringRepretation += id_words[id_words.length - 1];
-            stringRepretation += "\n";
-            stringRepretation += this.hpo_class_found.getLabel();
-            return stringRepretation;
-        }
-    }
 
     /**
      * This gets called if the user right clicks on an HPO term in the
@@ -1082,61 +979,6 @@ public class Loinc2HpoMainController {
 //
 //            this.treeView.setRoot(rootItem);
 //        }
-        e.consume();
-    }
-
-    @FXML
-    private void doubleClickTreeView(MouseEvent e) {
-        /*
-        if (e.getClickCount() == 2
-                && this.treeView.getRoot() != null) {
-            TreeItem<HPO_TreeView> current = this.treeView.getSelectionModel().getSelectedItem();
-            if (current == null || current.getValue() == null
-                    || current.getValue().hpo_class_found == null) {
-                return;
-            }
-            List<HPO_Class_Found> parents = SparqlQuery.getParents
-                    (current.getValue().hpo_class_found.getId());
-            List<HPO_Class_Found> children = SparqlQuery.getChildren
-                    (current.getValue().hpo_class_found.getId());
-
-            TreeItem<HPO_TreeView> rootItem = this.treeView.getRoot();
-            rootItem.setExpanded(true);
-
-            if (parents.size() > 0 || children.size() > 0) {
-                rootItem.getChildren().clear();
-            }
-
-            parents.stream()
-                    .map(p -> new TreeItem<>(new HPO_TreeView(p)))
-                    .forEach(p -> {
-                        rootItem.getChildren().add(p);
-                        p.getChildren().add(current);
-                        p.setExpanded(true);
-                    });
-            current.getChildren().clear();
-            current.setExpanded(true);
-            children.stream()
-                    .map(p -> new TreeItem<>(new HPO_TreeView(p)))
-                    .forEach(current.getChildren()::add);
-        }
-
-         */
-        e.consume();
-
-    }
-
-    @FXML
-    private void handleCandidateHPODragged(MouseEvent e) {
-        Dragboard db = hpoListView.startDragAndDrop(TransferMode.ANY);
-        ClipboardContent content = new ClipboardContent();
-        HpoClassFound selectedCell = hpoListView.getSelectionModel().getSelectedItem();
-        if (selectedCell != null) {
-            content.putString(selectedCell.getLabel());
-            db.setContent(content);
-        } else {
-            LOGGER.info("Dragging something that is not a HPO term");
-        }
         e.consume();
     }
 
@@ -1217,11 +1059,6 @@ public class Loinc2HpoMainController {
 
     }
 
-    @FXML
-    private void getContextMenu4TreeView(ContextMenuEvent event) {
-        event.consume();
-        treeView.setContextMenu(contextMenu);
-    }
 
     private LoincEntry getLoincIdSelected() {
         return loincTableView.getSelectionModel().getSelectedItem();
@@ -1645,7 +1482,11 @@ public class Loinc2HpoMainController {
         optionalResources.getLoincAnnotationMap().put(loincCode, annotation);
         LoincAnnotationCreatedViewFactory factory =
                 new LoincAnnotationCreatedViewFactory(optionalResources.getOntology(), annotation);
-        factory.openDialog();
+        boolean confirmed = factory.openDialogWithBoolean();
+        if (! confirmed) {
+            PopUps.showInfoMessage("Canceling new annotation", "warning");
+            return;
+        }
         annotationNoteField.clear();
         loincTableEnableMultiSelection.setSelected(false);
         this.hpoAnnotationTable.getItems().clear();
@@ -1654,25 +1495,6 @@ public class Loinc2HpoMainController {
             createAnnotationButton.setText("Create annotation");
         }
         changeColorLoincTableView();
-    }
-
-
-
-    @FXML
-    private void handleDragOver(DragEvent e) {
-        Dragboard db = e.getDragboard();
-        if (db.hasString()) {
-            e.acceptTransferModes(TransferMode.MOVE);
-        }
-
-        LOGGER.info("Drag over. Nothing specific todo");
-        e.consume();
-
-    }
-
-    @FXML
-    private void handleDragDone(DragEvent e) {
-        LOGGER.info("Drag done. Nothing specific todo");
     }
 
 
@@ -1768,8 +1590,6 @@ public class Loinc2HpoMainController {
             LOGGER.trace("Cannot download hp.obo, because directory not existing at " + f.getAbsolutePath());
             return;
         }
-        String BASENAME = "hp.json";
-
         ProgressIndicator pb = new ProgressIndicator();
         javafx.scene.control.Label label = new javafx.scene.control.Label("downloading hp.obo/.owl...");
         FlowPane root = new FlowPane();

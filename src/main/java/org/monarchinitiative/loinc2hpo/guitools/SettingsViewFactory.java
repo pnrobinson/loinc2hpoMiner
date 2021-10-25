@@ -42,4 +42,9 @@ public class SettingsViewFactory extends AbstractWebviewFactory {
         openDialog(windowTitle, html);
     }
 
+    public boolean openDialogWithBoolean() {
+        openDialog(); // dont need this here
+        return true;
+    }
+
 }

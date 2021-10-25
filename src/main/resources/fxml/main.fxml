@@ -56,7 +56,7 @@
        </HBox>
    </top>
    <center>
-       <SplitPane dividerPositions="0.4605475040257649" onDragDone="#handleDragDone" onDragOver="#handleDragOver" orientation="VERTICAL" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1">
+       <SplitPane dividerPositions="0.4605475040257649" orientation="VERTICAL" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1">
            <SplitPane dividerPositions="0.6185308848080133">
                <VBox>
                    <HBox VBox.vgrow="NEVER">
@@ -126,7 +126,7 @@
                            </GridPane.margin>
                        </Label>
                    </GridPane>
-                   <ListView fx:id="hpoListView" onDragDetected="#handleCandidateHPODragged" onMouseClicked="#handleCandidateHPODoubleClick" VBox.vgrow="ALWAYS">
+                   <ListView fx:id="hpoListView" onMouseClicked="#handleCandidateHPODoubleClick" VBox.vgrow="ALWAYS">
                        <contextMenu>
                            <ContextMenu fx:id="contextMenu">
                                <items>

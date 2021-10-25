@@ -2,13 +2,15 @@ package org.monarchinitiative.loinc2hpo.guitools;
 
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.*;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
-import org.monarchinitiative.loinc2hpo.model.Settings;
 
 import java.util.Objects;
+import java.util.Optional;
 
 public abstract class AbstractWebviewFactory {
 
@@ -19,6 +21,8 @@ public abstract class AbstractWebviewFactory {
     abstract String getHTML();
 
     abstract void openDialog();
+
+    abstract boolean openDialogWithBoolean();
 
     protected static String inlineCSS() {
         return "<head><style>\n" +
@@ -64,6 +68,38 @@ public abstract class AbstractWebviewFactory {
         scene.getStylesheets().add(css);
         window.setScene(scene);
         window.showAndWait();
+    }
+
+    /** Open a dialog that provides concise help for using PhenoteFX. */
+    public static boolean openDialogWithBoolean(String windowTitle, String html) {
+        final int PREFERRED_WIDTH = 600;
+        final int PREFERRED_HEIGHT = 500;
+        final Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        final Scene scene = alert.getDialogPane().getScene();
+        Pane pane = alert.getDialogPane();
+        VBox vbox =  new VBox();
+        vbox.setPrefHeight(PREFERRED_HEIGHT);
+        vbox.setPrefWidth(PREFERRED_WIDTH);
+        WebView wview = new WebView();
+        wview.getEngine().loadContent(html);
+        pane.getChildren().add(vbox);
+        HBox hbox = new HBox();
+        hbox.setPrefHeight(20);
+        hbox.setPrefWidth(PREFERRED_WIDTH);
+        Region region=new Region();
+        region.setPrefHeight(20);
+        region.setPrefWidth(PREFERRED_WIDTH);
+        HBox.setHgrow(region, Priority.ALWAYS);
+        Button acceptButton = new Button("Accept");
+        HBox.setMargin(acceptButton,new Insets(10, 10, 10, 0));
+        hbox.getChildren().addAll(region);
+        vbox.getChildren().addAll(wview,hbox, acceptButton);
+
+        String css = Objects.requireNonNull(SettingsViewFactory.class.getResource("/css/loinc2hpo.css")).toExternalForm();
+        scene.getStylesheets().add(css);
+        //alert.getButtonTypes().addAll(ButtonType.YES, ButtonType.NO);
+        final Optional<ButtonType> result = alert.showAndWait();
+        return result.get() == ButtonType.YES;
     }
 
 }

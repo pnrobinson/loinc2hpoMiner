@@ -64,4 +64,10 @@ public class LoincAnnotationCreatedViewFactory extends AbstractWebviewFactory {
         openDialog(windowTitle, html);
     }
 
+    public boolean openDialogWithBoolean() {
+        String windowTitle = "LOINC2HPO New Annotation";
+        String html = getHTML();
+        return openDialogWithBoolean(windowTitle, html);
+    }
+
 }
