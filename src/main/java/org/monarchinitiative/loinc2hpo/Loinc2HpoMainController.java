@@ -22,6 +22,7 @@ import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import org.monarchinitiative.loinc2hpo.guitools.LoincAnnotationCreatedViewFactory;
 import org.monarchinitiative.loinc2hpo.guitools.Platform;
 import org.monarchinitiative.loinc2hpo.guitools.PopUps;
 import org.monarchinitiative.loinc2hpo.guitools.SettingsViewFactory;
@@ -1363,6 +1364,7 @@ public class Loinc2HpoMainController {
             return;
         }
         Term term = hpo.getTermMap().get(tid);
+        currentAnnotationModel.setQnLow(term);
         HpoAnnotationRow row = HpoAnnotationRow.qnLow(tid, term.getName());
         updateHpoAnnotationTable(row);
     }
@@ -1380,6 +1382,7 @@ public class Loinc2HpoMainController {
         }
         Term term = hpo.getTermMap().get(tid);
         HpoAnnotationRow row = HpoAnnotationRow.qnHigh(tid, term.getName());
+        currentAnnotationModel.setQnHigh(term);
         updateHpoAnnotationTable(row);
     }
 
@@ -1396,6 +1399,7 @@ public class Loinc2HpoMainController {
             return;
         }
         Term term = hpo.getTermMap().get(tid);
+        currentAnnotationModel.setNormal(term);
         HpoAnnotationRow row = HpoAnnotationRow.normal(tid, term.getName());
         updateHpoAnnotationTable(row);
     }
@@ -1413,6 +1417,7 @@ public class Loinc2HpoMainController {
             return;
         }
         Term term = hpo.getTermMap().get(tid);
+        currentAnnotationModel.setOrdAbnormal(term);
         HpoAnnotationRow row = HpoAnnotationRow.ordAbnormal(tid, term.getName());
         updateHpoAnnotationTable(row);
     }
@@ -1430,6 +1435,7 @@ public class Loinc2HpoMainController {
             return;
         }
         Term term = hpo.getTermMap().get(tid);
+        currentAnnotationModel.setNominal(term);
         HpoAnnotationRow row = HpoAnnotationRow.nominal(tid, term.getName());
         updateHpoAnnotationTable(row);
     }
@@ -1504,6 +1510,9 @@ public class Loinc2HpoMainController {
                 .setNote(comment);
         builder.setNormalHpoTerm(normal.getId(), true)
                 .setHighValueHpoTerm(nominal.getId());
+        builder.setCreatedBy(settings.getBiocuratorID() == null ? MISSINGVALUE : settings.getBiocuratorID())
+                .setCreatedOn(LocalDateTime.now().withNano(0))
+                .setVersion(0.1);
         System.out.println("TODO NOMINAL ANNOTATION");
         Loinc2HpoAnnotationModel loinc2HPOAnnotation = builder.build();
         addAnnotationAndUpdateGui(loincCode, loinc2HPOAnnotation);
@@ -1532,22 +1541,35 @@ public class Loinc2HpoMainController {
                     loincCode + " is already annotated", "Overwrite warning");
             if (!toOverwrite) return;
         }
-        //map hpo terms to internal codes
-        if (!currentAnnotationModel.validOrdAnnotation()) {
-            PopUps.showWarningDialog("Error", "Invalid data",
-                    "Data for Ord (ordinal annotation) not valid");
-            return;
-        }
+
         String comment = annotationNoteField.getText().trim();
         // there are three annotations to add
         Term abn = currentAnnotationModel.getOrdAbnormal();
         Term normal = currentAnnotationModel.getNormal();
+        //map hpo terms to internal codes
+        if (!currentAnnotationModel.validOrdAnnotation()) {
+            String errorMsg;
+            if (normal == null) {
+                errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"normal\" term was null");
+            } else if (abn == null) {
+                errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"abnormal\" term was null");
+            } else {
+                errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; normal %s, abnormal: %s",
+                        loincScale.name(), normal.getName(), abn.getName());
+            }
+            PopUps.showWarningDialog("Error", "Invalid data",
+                    errorMsg);
+            return;
+        }
         Loinc2HpoAnnotationModel.Builder builder = new Loinc2HpoAnnotationModel.Builder();
         builder.setLoincId(loincCode)
                 .setLoincScale(loincScale)
                 .setNote(comment);
         builder.setNormalHpoTerm(normal.getId(), true)
                 .setHighValueHpoTerm(abn.getId());
+        builder.setCreatedBy(settings.getBiocuratorID() == null ? MISSINGVALUE : settings.getBiocuratorID())
+                .setCreatedOn(LocalDateTime.now().withNano(0))
+                .setVersion(0.1);
         Loinc2HpoAnnotationModel loinc2HPOAnnotation = builder.build();
         addAnnotationAndUpdateGui(loincCode, loinc2HPOAnnotation);
     }
@@ -1574,17 +1596,29 @@ public class Loinc2HpoMainController {
                     loincCode + " is already annotated", "Overwrite warning");
             if (!toOverwrite) return;
         }
-        //map hpo terms to internal codes
+        String comment = annotationNoteField.getText().trim();
+        // there are three annotations to add
+        Term low = currentAnnotationModel.getQnLow();
+        Term normal = currentAnnotationModel.getNormal();
+        Term high = currentAnnotationModel.getQnHigh();
+
        if (!currentAnnotationModel.validQnAnnotation()) {
+           String errorMsg;
+           if (normal == null) {
+               errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"normal\" term was null");
+           } else if (low == null) {
+               errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"low\" term was null");
+           } else if (high == null) {
+               errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"high\" term was null");
+           } else {
+               errorMsg = String.format("Invalid Qn annotation. LOINC type: %s; low: %s, normal %s, high: %s",
+                       loincScale.name(), low.getName(), normal.getName(), high.getName());
+           }
            PopUps.showWarningDialog("Error", "Invalid data",
-                   "Data for Qn (quantitative annotation) not valid");
+                   errorMsg);
            return;
        }
-       String comment = annotationNoteField.getText().trim();
-       // there are three annotations to add
-       Term low = currentAnnotationModel.getQnLow();
-       Term normal = currentAnnotationModel.getNormal();
-       Term high = currentAnnotationModel.getQnHigh();
+
 
         Loinc2HpoAnnotationModel.Builder builder = new Loinc2HpoAnnotationModel.Builder();
         builder.setLoincId(loincCode)
@@ -1594,18 +1628,9 @@ public class Loinc2HpoMainController {
                 .setNormalHpoTerm(normal.getId(), true)
                 .setHighValueHpoTerm(high.getId());
         builder.addAnnotation(InternalCodeSystem.abnormal(), new HpoTerm4TestOutcome(normal.getId()));
-        // add create time or updated time
-        if (createAnnotationButton.getText().equals("Create annotation")) { //create for the first time
-            builder.setCreatedBy(settings.getBiocuratorID() == null ? MISSINGVALUE : settings.getBiocuratorID())
-                    .setCreatedOn(LocalDateTime.now().withNano(0))
-                    .setVersion(0.1);
-        } else { // UPDATE mode
-            builder.setLastEditedBy(settings.getBiocuratorID() == null ? MISSINGVALUE : settings.getBiocuratorID())
-                    .setLastEditedOn(LocalDateTime.now().withNano(0))
-                    .setCreatedBy(optionalResources.getLoincAnnotationMap().get(loincCode).getCreatedBy())
-                    .setCreatedOn(optionalResources.getLoincAnnotationMap().get(loincCode).getCreatedOn())
-                    .setVersion(optionalResources.getLoincAnnotationMap().get(loincCode).getVersion() + 0.1);
-        }
+        builder.setCreatedBy(settings.getBiocuratorID() == null ? MISSINGVALUE : settings.getBiocuratorID())
+                .setCreatedOn(LocalDateTime.now().withNano(0))
+                .setVersion(0.1);
         Loinc2HpoAnnotationModel loinc2HPOAnnotation = builder.build();
         addAnnotationAndUpdateGui(loincCode, loinc2HPOAnnotation);
         e.consume();
@@ -1613,7 +1638,8 @@ public class Loinc2HpoMainController {
 
     private void addAnnotationAndUpdateGui(LoincId loincCode, Loinc2HpoAnnotationModel annotation) {
         optionalResources.getLoincAnnotationMap().put(loincCode, annotation);
-        PopUps.showInfoMessage("Added LOINC2HPO annotation", annotation.toString());
+        LoincAnnotationCreatedViewFactory factory = new LoincAnnotationCreatedViewFactory(loincCode, annotation);
+        factory.openDialog();
         annotationNoteField.clear();
         loincTableEnableMultiSelection.setSelected(false);
         this.hpoAnnotationTable.getItems().clear();
@@ -1849,7 +1875,8 @@ public class Loinc2HpoMainController {
      */
     @FXML
     private void openSettingsDialog() {
-        SettingsViewFactory.openSettingsDialog(settings);
+        SettingsViewFactory  factory= new SettingsViewFactory(settings);
+        factory.openDialog();
     }
 
     /**
