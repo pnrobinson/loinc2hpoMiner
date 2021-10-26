@@ -632,16 +632,16 @@ public class Loinc2HpoMainController {
     @FXML
     private void initLOINCtable(ActionEvent e) {
         this.loincmap = optionalResources.getLoincTableMap();
-        List<LoincEntry> lst = new ArrayList<>(loincmap.values());
-        loincTableView.getItems().clear(); // remove any previous entries
-        loincTableView.getItems().addAll(lst);
-        loincTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-
         if (this.loincmap.isEmpty()) {
             runLater(() -> PopUps.showWarningDialog("No LOINC data was imported",
                     "Warning",
                     "We could not import any LOINC data - \n did you import the correct LOINC file?"));
+            return;
         }
+        List<LoincEntry> lst = new ArrayList<>(loincmap.values());
+        loincTableView.getItems().clear(); // remove any previous entries
+        loincTableView.getItems().addAll(lst);
+        loincTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
         // now ingest the HPO
         String pathToHPO = settings.getHpoJsonPath();
         LOGGER.info("pathToHPO: " + pathToHPO);

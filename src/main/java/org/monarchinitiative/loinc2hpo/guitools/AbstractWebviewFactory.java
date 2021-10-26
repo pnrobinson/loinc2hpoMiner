@@ -1,8 +1,9 @@
 package org.monarchinitiative.loinc2hpo.guitools;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.*;
@@ -23,6 +24,8 @@ public abstract class AbstractWebviewFactory {
     abstract void openDialog();
 
     abstract boolean openDialogWithBoolean();
+
+    private boolean accept;
 
     protected static String inlineCSS() {
         return "<head><style>\n" +
@@ -70,36 +73,23 @@ public abstract class AbstractWebviewFactory {
         window.showAndWait();
     }
 
-    /** Open a dialog that provides concise help for using PhenoteFX. */
-    public static boolean openDialogWithBoolean(String windowTitle, String html) {
-        final int PREFERRED_WIDTH = 600;
-        final int PREFERRED_HEIGHT = 500;
-        final Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        final Scene scene = alert.getDialogPane().getScene();
-        Pane pane = alert.getDialogPane();
-        VBox vbox =  new VBox();
-        vbox.setPrefHeight(PREFERRED_HEIGHT);
-        vbox.setPrefWidth(PREFERRED_WIDTH);
-        WebView wview = new WebView();
-        wview.getEngine().loadContent(html);
-        pane.getChildren().add(vbox);
-        HBox hbox = new HBox();
-        hbox.setPrefHeight(20);
-        hbox.setPrefWidth(PREFERRED_WIDTH);
-        Region region=new Region();
-        region.setPrefHeight(20);
-        region.setPrefWidth(PREFERRED_WIDTH);
-        HBox.setHgrow(region, Priority.ALWAYS);
-        Button acceptButton = new Button("Accept");
-        HBox.setMargin(acceptButton,new Insets(10, 10, 10, 0));
-        hbox.getChildren().addAll(region);
-        vbox.getChildren().addAll(wview,hbox, acceptButton);
+    private void setAccept(boolean b) {
+        accept = b;
+    }
 
-        String css = Objects.requireNonNull(SettingsViewFactory.class.getResource("/css/loinc2hpo.css")).toExternalForm();
-        scene.getStylesheets().add(css);
-        //alert.getButtonTypes().addAll(ButtonType.YES, ButtonType.NO);
-        final Optional<ButtonType> result = alert.showAndWait();
-        return result.get() == ButtonType.YES;
+    /** Open a dialog that provides concise help for using PhenoteFX. */
+    public boolean openDialogWithBoolean(String windowTitle, String html) {
+        boolean accept = false;
+        final BooleanBox bbox = new BooleanBox(windowTitle,html);
+        bbox.addCancelListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                setAccept(true);
+            } else {
+                setAccept(false);
+            }
+        });
+        bbox.display();
+        return accept;
     }
 
 }
