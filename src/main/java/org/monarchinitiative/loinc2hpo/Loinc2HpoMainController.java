@@ -4,7 +4,6 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.concurrent.Task;
@@ -14,7 +13,6 @@ import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.input.*;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.web.WebEngine;
@@ -22,15 +20,9 @@ import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import org.monarchinitiative.loinc2hpo.guitools.LoincAnnotationCreatedViewFactory;
-import org.monarchinitiative.loinc2hpo.guitools.Platform;
-import org.monarchinitiative.loinc2hpo.guitools.PopUps;
-import org.monarchinitiative.loinc2hpo.guitools.SettingsViewFactory;
+import org.monarchinitiative.loinc2hpo.guitools.*;
 import org.monarchinitiative.loinc2hpo.io.HpoMenuDownloader;
-import org.monarchinitiative.loinc2hpo.io.loincparser.HpoClassFound;
-import org.monarchinitiative.loinc2hpo.io.loincparser.LoincLongNameComponents;
-import org.monarchinitiative.loinc2hpo.io.loincparser.LoincLongNameParser;
-import org.monarchinitiative.loinc2hpo.io.loincparser.LoincVsHpoQuery;
+import org.monarchinitiative.loinc2hpo.io.loincparser.*;
 import org.monarchinitiative.loinc2hpo.model.*;
 import org.monarchinitiative.loinc2hpo.model.codesystems.InternalCodeSystem;
 import org.monarchinitiative.loinc2hpo.model.loinc.LoincEntry;
@@ -119,8 +111,7 @@ public class Loinc2HpoMainController {
     private TableColumn<LoincEntry, String> systemTableColumn;
     @FXML
     private TableColumn<LoincEntry, String> nameTableColumn;
-    @FXML
-    private CheckMenuItem loincTableEnableMultiSelection;
+
     private Loinc2HpoAnnotationModel toCopy;
 
 
@@ -198,11 +189,7 @@ public class Loinc2HpoMainController {
     private BooleanProperty configurationComplete = new SimpleBooleanProperty(false);
     /**
      * The allows us to get info from the pom.xml file
-     * buildProperties.getName()
-     * buildProperties.getVersion();
-     * buildProperties.getTime();
-     * buildProperties.getArtifact();
-     * buildProperties.getGroup();
+     * buildProperties.getName(), buildProperties.getVersion(), etc.
      */
     @Autowired
     BuildProperties buildProperties;
@@ -267,7 +254,7 @@ public class Loinc2HpoMainController {
                 };
             }
         });
-
+    /*
 
         //if user creates a new Loinc group, add two menuitems for it, and specify the actions when those menuitems are clicked
         userCreatedLoincLists.addListener((ListChangeListener<String>) c -> {
@@ -350,6 +337,8 @@ public class Loinc2HpoMainController {
             }
         });
 
+     */
+
         //track what is selected in the loincTable. If currently selected LOINC is a Ord type with a Presence/Absence outcome, change the listener isPresentOrd to true; otherwise false.
         loincTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -357,19 +346,7 @@ public class Loinc2HpoMainController {
             }
         });
 
-        loincTableEnableMultiSelection.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            if (observable != null) {
-                if (newValue) {
-                    LOGGER.trace("multi selection is enabled");
-                    loincTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-                } else {
-                    LOGGER.trace("multi selection is not enabled");
-                    loincTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-                }
-            } else {
-                return;
-            }
-        });
+
         initTableStructure();
         initializeHpoAnnotationTable();
     }
@@ -472,32 +449,6 @@ public class Loinc2HpoMainController {
         accordion.setExpandedPane(loincTableTitledpane);
     }
 
-    @FXML
-    private void handleDoubleClickLoincTable(MouseEvent event) {
-        if (event.getClickCount() == 2) {
-            LoincEntry rowData = loincTableView.getSelectionModel().getSelectedItem();
-            if (rowData == null) {
-                return;
-            }
-
-            //disable further action if the user is not under Editing mode
-//            if(appTempData.getLoincUnderEditing() != null && !appTempData.getLoincUnderEditing().equals(rowData)){
-//                PopUps.showInfoMessage("You are currently editing " + rowData.getLOINC_Number() +
-//                                ". Save or cancel editing current loinc annotation before switching to others",
-//                        "Under Editing mode");
-//            } else {
-//                updateHpoTermListView(rowData);
-//            }
-
-        }
-
-        if (!createAnnotationButton.getText().equals("Save")) { //under saving mode
-            annotationNoteField.setText("");
-            this.hpoAnnotationTable.getItems().clear();
-        }
-        event.consume();
-    }
-
 
     private void updateHpoTermListView(LoincEntry entry) {
         String name = entry.getLongName();
@@ -588,9 +539,6 @@ public class Loinc2HpoMainController {
         List<HpoClassFound> queryResults = loincVsHpoQuery.query_manual(keysInList, loincLongNameComponents);
         if (queryResults.size() != 0) {
             ObservableList<HpoClassFound> items = FXCollections.observableArrayList();
-            for (HpoClassFound candidate : queryResults) {
-                items.add(candidate);
-            }
             items.addAll(queryResults);
             this.hpoListView.setItems(items);
             userInputForManualQuery.clear();
@@ -669,150 +617,56 @@ public class Loinc2HpoMainController {
             } else { //correct loinc code form but not valid
                 throw new Exception();
             }
-        } catch (Exception msg) { //catch all kind of exception
-            //logger.debug(loincEntry.getLOINC_Number() + " : " + loincEntry.getLongName());
-            loincmap.values().stream()
-                    .filter(loincEntry -> containedIn(query, loincEntry.getLongName()))
-                    .forEach(entrylist::add);
-            //.forEach(loincEntry -> entryListInOrder.add(loincEntry));
-        }
-        if (entrylist.isEmpty()) {
-            //if (entryListInOrder.isEmpty()){
-            LOGGER.error(String.format("Could not identify LOINC entry for \"%s\"", query));
-            PopUps.showWarningDialog("LOINC Search",
-                    "No hits found",
-                    String.format("Could not identify LOINC entry for \"%s\"", query));
+        } catch (Exception msg) {
+            PopUps.showException("Error", "Could not search LOINC data", msg);
             return;
-        } else {
-            LOGGER.trace(String.format("Searching table for:  %s", query));
-            LOGGER.trace("# of loinc entries found: " + entrylist.size());
-            //logger.trace("# of loinc entries found: " + entryListInOrder.size());
         }
+        LOGGER.trace(String.format("Searching table for:  %s", query));
+        LOGGER.trace("# of loinc entries found: " + entrylist.size());
         loincTableView.getItems().clear();
         loincTableView.getItems().addAll(entrylist);
         accordion.setExpandedPane(loincTableTitledpane);
     }
 
-    private boolean containedIn(String query, String text) {
-        String[] keys = query.split("\\W");
-        for (String key : keys) {
-            if (!text.toLowerCase().contains(key.toLowerCase())) {
-                return false;
-            }
-        }
-        return true;
-    }
-
+    /**
+     * This filters the available LOINC entries for annotation according to whether they
+     * are present in a user-supplied List of LOINC Ids
+     */
     @FXML
     private void handleLoincFiltering(ActionEvent e) {
         e.consume();
         List<LoincEntry> entrylist = new ArrayList<>();
-        String enlistName;
         FileChooser chooser = new FileChooser();
-        if (settings.getAnnotationFile() != null) {
-            chooser.setInitialDirectory(new File(settings.getAnnotationFile()));
-        }
-        chooser.setTitle("Choose File containing a list of interested Loinc " +
-                "codes");
-        File f = chooser.showOpenDialog(null);
-        List<String> notFoundList = new ArrayList<>();
-        List<String> malformedList = new ArrayList<>();
-        int malformedLoincCount = 0;
-        if (f != null) {
-            String path = f.getAbsolutePath();
-            enlistName = f.getName();
-//            try {
-//                Set<String> loincOfInterest = new LoincOfInterest(path).getLoincOfInterest();
-//                //loincOfInterest.stream().forEach(System.out::print);
-//                for (String loincString : loincOfInterest) {
-//                    LoincId loincId;
-//                    LoincEntry loincEntry;
-//                    try {
-//                        loincId = new LoincId(loincString);
-//                        loincEntry = appResources.getLoincEntryMap().get(loincId);
-//                    } catch (MalformedLoincCodeException e2) {
-//                        //try to see whether user provided Loinc long common name
-//                        loincEntry = appResources.getLoincEntryMapFromName().
-//                                get(loincString);
-//                        if (loincEntry == null) {
-//                            logger.error("Malformed loinc");
-//                            malformedList.add(loincString);
-//                            continue;
-//                        }
-//                    }
-//                    if (loincEntry != null) {
-//                        entrylist.add(loincEntry);
-//                    } else {
-//                        notFoundList.add(loincString);
-//                    }
-//                }
-//            } catch (FileNotFoundException e1) {
-//                e1.printStackTrace();
-//            }
 
-            if (!malformedList.isEmpty() || !notFoundList.isEmpty()) {
-                String malformed = String.join(",\n", malformedList);
-                String notfound = String.join(",\n", notFoundList);
-                String popupMessage = String.format("# malformed Loinc codes: %d\n %s\n\n# Loinc codes not found: %d\n%s",
-                        malformedList.size(), malformed, notFoundList.size(), notfound);
-                PopUps.showInfoMessage(popupMessage, "Incomplete import of Loinc codes");
-            }
-            if (entrylist.isEmpty()) {
-                LOGGER.error("Found 0 Loinc codes");
-                PopUps.showWarningDialog("LOINC filtering",
+        chooser.setTitle("File with Loinc codes to be annotated");
+        File f = chooser.showOpenDialog(null);
+
+        UserSuppliedLoincIdParser loincIdParser = new UserSuppliedLoincIdParser(f);
+        Set<LoincId> userSuppliedLoincIds = loincIdParser.getLoincIdSet();
+        if (userSuppliedLoincIds.isEmpty()) {
+            LOGGER.error("Found 0 Loinc codes");
+            PopUps.showWarningDialog("LOINC filtering",
                         "No hits found",
                         "Could not find any loinc codes");
-                return;
-            } else {
-                LOGGER.trace("Loinc filtering result: ");
-                LOGGER.trace("# of loinc entries found: " + entrylist.size());
-            }
-            loincTableView.getItems().clear();
-            loincTableView.getItems().addAll(entrylist);
-            // appTempData.addFilteredList(enlistName, new ArrayList<>(entrylist)); //keep a record in appTempData
-            //entrylist.forEach(p -> logger.trace(p.getLOINC_Number()));
-            accordion.setExpandedPane(loincTableTitledpane);
-        } else {
-            LOGGER.info("Unable to obtain path to LOINC of interest file");
-        }
-    }
-
-    @FXML
-    private void lastLoincList(ActionEvent e) {
-        e.consume();
-//        List<LoincEntry> lastLoincList = appTempData.previousLoincList();
-//        if (lastLoincList != null && !lastLoincList.isEmpty()) {
-//            loincTableView.getItems().clear();
-//            loincTableView.getItems().addAll(lastLoincList);
-//        }
-    }
-
-    @FXML
-    private void nextLoincList(ActionEvent e) {
-        e.consume();
-
-//        List<LoincEntry> nextLoincList = appTempData.nextLoincList();
-//        if (nextLoincList != null && !nextLoincList.isEmpty()) {
-//            loincTableView.getItems().clear();
-//            loincTableView.getItems().addAll(nextLoincList);
-//        }
-    }
-
-    @FXML
-    private void newLoincList(ActionEvent e) {
-
-        e.consume();
-        String nameOfList = PopUps.getStringFromUser("New Loinc List", "Type in the name", "name");
-        if (nameOfList == null) {
             return;
+        } else {
+            LOGGER.trace("# of loinc entries found: " + userSuppliedLoincIds.size());
         }
-        //appTempData.addUserCreatedLoincList(nameOfList, new LinkedHashSet<>());
-        userCreatedLoincLists.add(nameOfList);
-        Random rand = new Random();
-        double[] randColorValues = rand.doubles(3, 0, 1).toArray();
-        Color randColor = Color.color(randColorValues[0], randColorValues[1], randColorValues[2]);
-        //  settings.getUserCreatedLoincListsColor().put(nameOfList, ColorUtils.colorValue(randColor));
+        // get corresponding LoincEntries for display in the table
+        Set<LoincEntry> filteredLoincEntries = optionalResources
+                .getLoincTableMap().entrySet().stream()
+                .filter(entry -> userSuppliedLoincIds.contains(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toSet());
+
+        loincTableView.getItems().clear();
+        loincTableView.getItems().addAll(filteredLoincEntries);
+        accordion.setExpandedPane(loincTableTitledpane);
     }
+
+
+
+
 
     @FXML
     private void setLoincGroupColor(ActionEvent e) {
@@ -942,166 +796,6 @@ public class Loinc2HpoMainController {
     }
 
 
-
-    /**
-     * This gets called if the user right clicks on an HPO term in the
-     * hpoListView
-     */
-    @FXML
-    private void handleCandidateHPODoubleClick(MouseEvent e) {
-
-//        if (e.getClickCount() == 2 && hpoListView.getSelectionModel()
-//                .getSelectedItem() != null && hpoListView.getSelectionModel()
-//                .getSelectedItem() instanceof HPO_Class_Found) {
-//            HPO_Class_Found hpo_class_found = (HPO_Class_Found) hpoListView
-//                    .getSelectionModel().getSelectedItem();
-//            List<HPO_Class_Found> parents = SparqlQuery.getParents
-//                    (hpo_class_found.getId());
-//            List<HPO_Class_Found> children = SparqlQuery.getChildren
-//                    (hpo_class_found.getId());
-//
-//            TreeItem<HPO_TreeView> rootItem = new TreeItem<>(new HPO_TreeView()); //dummy root node
-//            rootItem.setExpanded(true);
-//            TreeItem<HPO_TreeView> current = new TreeItem<>
-//                    (new HPO_TreeView(hpo_class_found));
-//
-//            parents.stream() //add parent terms to root; add current to each parent term
-//                    .map(p -> new TreeItem<>(new HPO_TreeView(p)))
-//                    .forEach(p -> {
-//                        rootItem.getChildren().add(p);
-//                        p.getChildren().add(current);
-//                        p.setExpanded(true);
-//                    });
-//            current.setExpanded(true);
-//            children.stream() //add child terms to current
-//                    .map(p -> new TreeItem<>(new HPO_TreeView(p)))
-//                    .forEach(current.getChildren()::add);
-//
-//            this.treeView.setRoot(rootItem);
-//        }
-        e.consume();
-    }
-
-
-
-    //ensure that at least one LOINC entry is selected
-    private boolean checkSelectedLoinc() {
-        switch (loincTableView.getSelectionModel().getSelectionMode()) {
-            case SINGLE:
-                if (loincTableView.getSelectionModel().getSelectedItem() != null &&
-                        loincTableView.getSelectionModel().getSelectedItem().getScale().equals(toCopy.getLoincScale().toString())) {
-                    return true;
-                }
-            case MULTIPLE:
-                if (loincTableView.getSelectionModel().getSelectedItems() != null &&
-                        !loincTableView.getSelectionModel().getSelectedItems().isEmpty()) {
-                    List<String> scaleTypes = loincTableView.getSelectionModel().getSelectedItems()
-                            .stream().map(LoincEntry::getScale)
-                            .distinct().collect(Collectors.toList());
-                    if (scaleTypes.size() == 1 && scaleTypes.get(0).equals(toCopy.getLoincScale().toString())) {
-                        return true;
-                    }
-                }
-            default:
-                return false;
-        }
-    }
-
-    @FXML
-    private void copyAnnotation(ActionEvent event) {
-        LOGGER.trace("copy loincAnnotation to other LOINCs");
-        LoincEntry selectedLoinc = loincTableView.getSelectionModel().getSelectedItem();
-        if (selectedLoinc == null) {
-            LOGGER.error("Select a LOINC entry to copy");
-            return;
-        }
-//        if (!appResources.getLoincAnnotationMap().containsKey(selectedLoinc.getLOINC_Number())) {
-//            PopUps.showWarningDialog("Error Selection", "LOINC does not have annotation", "Select a LOINC code that has already been annotated");
-//            logger.error("Annotation does not exist for " + selectedLoinc.getLOINC_Number());
-//            return;
-//        }
-//        toCopy = appResources.getLoincAnnotationMap().get(selectedLoinc.getLOINC_Number());
-//        loincTableEnableMultiSelection.setSelected(true);
-        //loincTableView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-    }
-
-    @FXML
-    private void pasteAnnotation(ActionEvent e) {
-        LOGGER.trace("paste annotation");
-        if (toCopy == null) {
-            PopUps.showWarningDialog("Error Selection", "Unspecified item to copy", "Select a LOINC code to copy annotation from in the LOINC table");
-            return;
-        }
-        if (!checkSelectedLoinc()) { //make sure there is at least one valid LOINC entry selection
-            PopUps.showWarningDialog("Error Selection", "Possible Errors:", "1) No LOINC entry is selected;\n2) >= 1 selected LOINC entry does match the scale of origin LOINC");
-            return;
-        }
-
-        if (!loincTableEnableMultiSelection.isSelected()) {
-            pasteAnnotationTo(loincTableView.getSelectionModel().getSelectedItem().getLOINC_Number());
-        } else {
-            loincTableView.getSelectionModel().getSelectedItems().stream()
-                    .forEach(loinc -> {
-                        LOGGER.trace("copy to: " + loinc.getLongName());
-                        pasteAnnotationTo(loinc.getLOINC_Number());
-                    });
-        }
-
-        //refresh annotation tab
-        //refreshTable();
-        changeColorLoincTableView();
-        //  appTempData.setSessionChanged(true);
-
-        //reset
-        toCopy = null;
-        //loincTableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
-        loincTableEnableMultiSelection.setSelected(false);
-
-    }
-
-
-    private LoincEntry getLoincIdSelected() {
-        return loincTableView.getSelectionModel().getSelectedItem();
-    }
-
-
-    /**
-     * loincTableView.getSelectionModel().select(loincEntry);
-     * logger.debug("selected: " + loincTableView.getSelectionModel().getSelectedItem().getLOINC_Number().toString());
-     * loincTableView.requestFocus();
-     * int focusindex = 0;
-     * for (int i = 0; i < loincTableView.getItems().size(); i++) {
-     * if (loincTableView.getSelectionModel().isSelected()) {
-     * focusindex = i;
-     * }
-     * }
-     * logger.debug("focusindex: " + focusindex);
-     **/
-    protected void setLoincIdSelected(LoincEntry loincEntry) {
-        //@TODO: this is a lazy implementation. We should try to put selected item in view
-        loincTableView.getItems().clear();
-        loincTableView.getItems().addAll(loincEntry);
-    }
-
-
-
-
-
-
-    /**
-     * This method is called from the pop up window
-     *
-     * @param loincAnnotation passed from the pop up window
-     */
-    void editCurrentAnnotation(Loinc2HpoAnnotationModel loincAnnotation) {
-        /*
-
-
-         */
-
-    }
-
-
     @FXML
     private void handleClear(ActionEvent event) {
         annotationNoteField.clear();
@@ -1112,10 +806,6 @@ public class Loinc2HpoMainController {
         createAnnotationButton.setText("Create annotation");
     }
 
-    void setLoincIdSelected(LoincId loincId) {
-//        LoincEntry loincEntry = appResources.getLoincEntryMap().get(loincId);
-//        setLoincIdSelected(loincEntry);
-    }
 
     private void noLoincEntryAlert() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -1277,37 +967,21 @@ public class Loinc2HpoMainController {
         updateHpoAnnotationTable(row);
     }
 
+    /**
+     * This gets called if the user right clicks on the candidate HPO annotations in the upper right.
+     */
+    @FXML
+    public void deleteCandidateHpoAnnotation(ActionEvent e) {
+        e.consume();
+        HpoAnnotationRow selectedRow = this.hpoAnnotationTable.getSelectionModel().getSelectedItem();
+        this.hpoAnnotationTable.getItems().remove(selectedRow);
+    }
 
 
     @FXML
     private void descendantsOfMarkedTerm(ActionEvent e) {
         System.err.println("[WARNING] suggestNewChildTerm not implemented");
         e.consume();
-    }
-
-
-    private void pasteAnnotationTo(LoincId loincId) {
-//        if (appResources.getLoincAnnotationMap().containsKey(loincId)) {
-//            logger.trace("Overwrite: " + loincId);
-//        }
-        String comments = toCopy.getNote() == null ? "" : "@original comment: " + toCopy.getNote();
-        String copyInfo = String.format("copied from: %s %s", toCopy.getLoincId().toString(), comments);
-
-        Loinc2HpoAnnotationModel.Builder builder = new Loinc2HpoAnnotationModel.Builder()
-                .setLoincId(loincId)
-                .setLoincScale(toCopy.getLoincScale())
-                .setCreatedBy(toCopy.getCreatedBy())
-                .setCreatedOn(toCopy.getCreatedOn())
-                .setLastEditedBy(toCopy.getLastEditedBy())
-                .setLastEditedOn(toCopy.getLastEditedOn())
-                .setNote(copyInfo)
-                .setFlag(toCopy.getFlag())
-                .setVersion(toCopy.getVersion());
-        toCopy.getCandidateHpoTerms().entrySet().stream()
-                .forEach(entry -> builder.addAnnotation(entry.getKey(), entry.getValue()));
-
-        // appResources.getLoincAnnotationMap().put(loincId, builder.build());
-
     }
 
     @FXML
@@ -1483,13 +1157,12 @@ public class Loinc2HpoMainController {
         LoincAnnotationCreatedViewFactory factory =
                 new LoincAnnotationCreatedViewFactory(optionalResources.getOntology(), annotation);
         boolean confirmed = factory.openDialogWithBoolean();
-        LOGGER.error("Confirmed " + confirmed);
+        LOGGER.trace("Confirmed annotation for " + annotation);
         if (! confirmed) {
             PopUps.showInfoMessage("Canceling new annotation", "warning");
             return;
         }
         annotationNoteField.clear();
-        loincTableEnableMultiSelection.setSelected(false);
         this.hpoAnnotationTable.getItems().clear();
         refreshLoinc2HpoAnnotationTable();
         if (createAnnotationButton.getText().equals("Save")) {
@@ -1587,7 +1260,7 @@ public class Loinc2HpoMainController {
     public void downloadHPO(ActionEvent e) {
         String dirpath = Platform.getLoinc2HpoDir().getAbsolutePath();
         File f = new File(dirpath);
-        if (f == null || !(f.exists() && f.isDirectory())) {
+        if (!f.isDirectory()) {
             LOGGER.trace("Cannot download hp.obo, because directory not existing at " + f.getAbsolutePath());
             return;
         }
@@ -1693,8 +1366,7 @@ public class Loinc2HpoMainController {
      */
     @FXML
     private void openHelpDialog() {
-        System.err.println("[WARNING] Help dialog not implemented");
-        //HelpViewFactory.openHelpDialog();
+        HelpViewFactory.openHelpDialog();
     }
 
     /**
@@ -1725,59 +1397,19 @@ public class Loinc2HpoMainController {
         //Create a session if it is saved for the first time
         if (settings.getAnnotationFile() == null) {
             PopUps.showWarningDialog("Warning", "Error",
-                    "Attempt to save files without annotation folder");
+                    "Attempt to save annotation file without valid path (see configuration menu).");
             return;
         }
-
-        String dataDir = settings.getAnnotationFile() + File.separator + "Data";
-        System.err.println("WARNING -- SAVE NOT IMPLEMENTED");
-//
- /*
-        Path folderTSVSingle = Paths.get(dataDir + File.separator + Constants.TSVSingleFileFolder);
-        if (!Files.exists(folderTSVSingle)) {
-            try {
-                Files.createDirectory(folderTSVSingle);
-            } catch (IOException e1) {
-                PopUps.showWarningDialog("Error message",
-                        "Failure to create folder" ,
-                        String.format("An error occurred when trying to make a directory at %s. Try again!", folderTSVSingle));
-                return;
-            }
-        }
-
-        String annotationTSVSingleFile = folderTSVSingle.toString() + File.separator + Constants.TSVSingleFileName;
+        String annotationTSVSingleFile = settings.getAnnotationFile();
         try {
-            Loinc2HpoAnnotationModel.to_csv_file(appResources.getLoincAnnotationMap(), annotationTSVSingleFile);
-        } catch (IOException e1) {
+            Loinc2HpoAnnotationModel.to_csv_file(optionalResources.getLoincAnnotationMap(), annotationTSVSingleFile);
+        } catch (IOException ioe) {
             PopUps.showWarningDialog("Error message",
                     "Failure to Save Session Data" ,
                     String.format("An error occurred when trying to save data to %s. Try again!", annotationTSVSingleFile));
             return;
         }
-
-        String pathToLoincCategory = dataDir + File.separator + LOINC_CATEGORY_folder;
-        if (!new File(pathToLoincCategory).exists()) {
-            new File(pathToLoincCategory).mkdir();
-        }
-        appResources.getUserCreatedLoincLists().entrySet()
-                .forEach(p -> {
-                    String path = pathToLoincCategory + File.separator + p.getKey() + ".txt";
-                    Set<LoincId> loincIds = appResources.getUserCreatedLoincLists().get(p.getKey());
-                    StringBuilder builder = new StringBuilder();
-                    loincIds.forEach(l -> {
-                        builder.append (l);
-                        builder.append("\n");
-                    });
-                    WriteToFile.writeToFile(builder.toString().trim(), path);
-                });
-
-        //reset the session change tracker
-        appTempData.setSessionChanged(false);
-           */
-        if (e != null) {
-            e.consume();
-        }
-
+        e.consume();
     }
 
     public void saveBeforeExit() {
@@ -1791,33 +1423,24 @@ public class Loinc2HpoMainController {
 
     @FXML
     public void close(ActionEvent e) {
-
         e.consume(); //important to consume it first; otherwise,
         //window will always close
         if (isSessionDataChanged()) {
-
             String[] choices = new String[]{"Yes", "No"};
             Optional<String> choice = PopUps.getToggleChoiceFromUser(choices,
                     "Session has been changed. Save changes? ", "Exit " +
                             "Confirmation");
-
-
             if (choice.isPresent() && choice.get().equals("Yes")) {
                 saveBeforeExit();
                 javafx.application.Platform.exit();
                 System.exit(0);
-                //window.close();
             } else if (choice.isPresent() && choice.get().equals("No")) {
                 javafx.application.Platform.exit();
                 System.exit(0);
-                //window.close();
-            } else {
-                //hang on. No action required
             }
         } else {
             javafx.application.Platform.exit();
             System.exit(0);
-            //window.close();
         }
     }
 
@@ -1877,75 +1500,63 @@ public class Loinc2HpoMainController {
      * Ingest the existing annotation file and display it in one of the tabs of the accordeon.
      */
     private void refreshLoinc2HpoAnnotationTable() {
-        Map<LoincId, Loinc2HpoAnnotationModel> testmap = optionalResources.getLoincAnnotationMap();
+        Map<LoincId, Loinc2HpoAnnotationModel> annotationMap = optionalResources.getLoincAnnotationMap();
         runLater(() -> {
             loincAnnotationTableView.getItems().clear();
-            loincAnnotationTableView.getItems().addAll(testmap.values());
+            loincAnnotationTableView.getItems().addAll(annotationMap.values());
         });
     }
 
     @FXML
     private void handleReview(ActionEvent event) {
-        /*
-        if (appResources.getLoincEntryMap() == null || appResources.getLoincEntryMap().isEmpty()) {
+        if (optionalResources.getLoincTableMap() == null || optionalResources.getLoincTableMap().isEmpty()) {
             PopUps.showInfoMessage("The loinc number is not found. Try clicking \"Initialize LOINC Table\"", "Loinc Not Found");
             return;
         }
-        if (appResources.getTermidTermMap() == null || appResources.getTermidTermMap().isEmpty()) {
-            PopUps.showInfoMessage("Hpo is not imported yet. Try clicking \"Initialize HPO appTempData\" first.", "HPO not imported");
+        if (optionalResources.getOntology() == null) {
+            PopUps.showInfoMessage("HPO is not imported yet. Try downloading the HPO first (settings menu).", "HPO not imported");
             return;
         }
         Loinc2HpoAnnotationModel selected = loincAnnotationTableView.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            annotateTabController.setLoincIdSelected(selected.getLoincId());
-            annotateTabController.showAllAnnotations(event);
+            PopUps.showInfoMessage("TODO -- IMPLEMENT REVIEW.", "WARNING");
+            return;
         }
-    */
+
     }
 
     @FXML
     private void handleEdit(ActionEvent event) {
-        /*
-        if (appResources.getLoincEntryMap() == null || appResources.getLoincEntryMap().isEmpty()) {
+        if (optionalResources.getLoincTableMap() == null || optionalResources.getLoincTableMap().isEmpty()) {
             PopUps.showInfoMessage("The loinc number is not found. Try clicking \"Initialize LOINC Table\"", "Loinc Not Found");
             return;
         }
-        if (appResources.getTermidTermMap() == null || appResources.getTermidTermMap().isEmpty()) {
-            PopUps.showInfoMessage("Hpo is not imported yet. Try clicking \"Initialize HPO appTempData\" first.", "HPO not imported");
+        if (optionalResources.getOntology() == null) {
+            PopUps.showInfoMessage("HPO is not imported yet. Try downloading the HPO first (settings menu).", "HPO not imported");
             return;
         }
-
-        Loinc2HpoAnnotationModel toEdit = loincAnnotationTableView.getSelectionModel()
-                .getSelectedItem();
+        Loinc2HpoAnnotationModel toEdit = loincAnnotationTableView.getSelectionModel().getSelectedItem();
         if (toEdit != null) {
-            mainController.switchTab(MainController.TabPaneTabs.AnnotateTabe);
-            annotateTabController.editCurrentAnnotation(toEdit);
+            PopUps.showInfoMessage("TODO -- IMPLEMENT EDITING.", "WARNING");
+            return;
         }
-
-         */
         event.consume();
     }
 
     @FXML
     private void handleDelete(ActionEvent event) {
-        /*
         boolean confirmation = PopUps.getBooleanFromUser("Are you sure you want to delete the record?", "Confirm deletion request", "Deletion");
         if (confirmation) {
-            Loinc2HpoAnnotationModel toDelete = loincAnnotationTableView.getSelectionModel()
-                    .getSelectedItem();
+            Loinc2HpoAnnotationModel toDelete = loincAnnotationTableView.getSelectionModel().getSelectedItem();
             if (toDelete != null) {
                 loincAnnotationTableView.getItems().remove(toDelete);
-                appResources.getLoincAnnotationMap().remove(toDelete.getLoincId());
-                appTempData.setSessionChanged(true);
+                optionalResources.getLoincAnnotationMap().remove(toDelete.getLoincId());
             }
         }
-
-         */
         event.consume();
     }
 
     protected void exportAnnotationsAsTSV() {
-        /*
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Specify file name");
         chooser.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -1962,17 +1573,15 @@ public class Loinc2HpoMainController {
 
             if (!f.exists() || overwrite) {
                 try {
-                    Loinc2HpoAnnotationModel.to_csv_file(appResources.getLoincAnnotationMap(), path);
+                    Loinc2HpoAnnotationModel.to_csv_file(optionalResources.getLoincAnnotationMap(), path);
                 } catch (IOException e1) {
+                    String errorMsg = String.format("An error occurred when trying to save data to %s. Try again!", path);
                     PopUps.showWarningDialog("Error message",
-                            "Failure to Save Session Data" ,
-                            String.format("An error occurred when trying to save data to %s. Try again!", path));
-                    return;
+                            "Failure to Save Session Data" ,errorMsg);
+                    LOGGER.error(errorMsg);
                 }
             }
         }
-
-         */
     }
 
 }
