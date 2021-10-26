@@ -1,22 +1,19 @@
 package org.monarchinitiative.loinc2hpo.guitools;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.layout.*;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
-import java.util.Optional;
 
 public abstract class AbstractWebviewFactory {
-
+    private final static Logger LOGGER = LoggerFactory.getLogger(AbstractWebviewFactory.class);
     AbstractWebviewFactory() {
-
     }
 
     abstract String getHTML();
@@ -25,7 +22,6 @@ public abstract class AbstractWebviewFactory {
 
     abstract boolean openDialogWithBoolean();
 
-    private boolean accept;
 
     protected static String inlineCSS() {
         return "<head><style>\n" +
@@ -73,23 +69,11 @@ public abstract class AbstractWebviewFactory {
         window.showAndWait();
     }
 
-    private void setAccept(boolean b) {
-        accept = b;
-    }
-
     /** Open a dialog that provides concise help for using PhenoteFX. */
     public boolean openDialogWithBoolean(String windowTitle, String html) {
-        boolean accept = false;
         final BooleanBox bbox = new BooleanBox(windowTitle,html);
-        bbox.addCancelListener((observable, oldValue, newValue) -> {
-            if (newValue) {
-                setAccept(true);
-            } else {
-                setAccept(false);
-            }
-        });
         bbox.display();
-        return accept;
+        return bbox.acceptProperty.get();
     }
 
 }

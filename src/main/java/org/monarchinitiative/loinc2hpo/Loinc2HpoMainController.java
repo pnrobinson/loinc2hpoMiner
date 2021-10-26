@@ -1483,6 +1483,7 @@ public class Loinc2HpoMainController {
         LoincAnnotationCreatedViewFactory factory =
                 new LoincAnnotationCreatedViewFactory(optionalResources.getOntology(), annotation);
         boolean confirmed = factory.openDialogWithBoolean();
+        LOGGER.error("Confirmed " + confirmed);
         if (! confirmed) {
             PopUps.showInfoMessage("Canceling new annotation", "warning");
             return;

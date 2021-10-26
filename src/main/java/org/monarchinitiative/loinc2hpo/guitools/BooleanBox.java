@@ -1,76 +1,50 @@
 package org.monarchinitiative.loinc2hpo.guitools;
 
-import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.scene.layout.*;
+import javafx.scene.shape.Box;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.stage.Modality;
-import javafx.stage.Stage;
 
 import java.util.Objects;
-import java.util.Optional;
 
 
 /**
- * To use this class
- * final BooleanBox warning = new AlertBox("Warning!",
- * "Are you sure you would like to do this?");
- * warning.addCancelListener(new ChangeListener<Boolean>() {
- *
- * @Override public void changed(final ObservableValue<? extends Boolean> observable, final Boolean oldValue, final Boolean newValue) {
- * if (newValue) {
- * System.out.println("Tschüss");
- * } else {
- * System.out.println("Thanks for confidence");
- * }
- * }
- * });
+ * Dialog with HTML/Webview that allows the user to accept or cancel a new annotation.
  */
 public class BooleanBox {
     Stage window;
-    ObjectProperty<Boolean> cancel = new SimpleObjectProperty<>(null);
+    ObjectProperty<Boolean> acceptProperty = new SimpleObjectProperty<>(false);
     private final String title;
     private final String html;
 
     public BooleanBox(final String title, final String html) {
-        cancel.setValue(null);
+        acceptProperty.setValue(false);
         this.title = title;
         this.html = html;
     }
 
     public void display() {
         window = new Stage(); // Create the stage.
-
-        window.initModality(Modality.APPLICATION_MODAL); // If window is up, make user handle it.
-        window.setTitle(title);
-        window.setMinHeight(350);
-        window.setMinWidth(250);
-        window.setAlwaysOnTop(true);
-
         final int PREFERRED_WIDTH = 600;
         final int PREFERRED_HEIGHT = 500;
-        final Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        final Scene scene = alert.getDialogPane().getScene();
-        Pane pane = alert.getDialogPane();
+        window.initModality(Modality.APPLICATION_MODAL); // If window is up, make user handle it.
+        window.setTitle(title);
+        window.setMinHeight(PREFERRED_WIDTH);
+        window.setMinWidth(PREFERRED_HEIGHT);
+        window.setAlwaysOnTop(true);
         VBox vbox = new VBox();
         vbox.setPrefHeight(PREFERRED_HEIGHT);
         vbox.setPrefWidth(PREFERRED_WIDTH);
         WebView wview = new WebView();
         wview.getEngine().loadContent(html);
-        pane.getChildren().add(vbox);
+        Pane pane = new Pane();
         HBox hbox = new HBox();
         hbox.setPrefHeight(20);
         hbox.setPrefWidth(PREFERRED_WIDTH);
@@ -80,18 +54,23 @@ public class BooleanBox {
         HBox.setHgrow(region, Priority.ALWAYS);
         final Button yesButton = new Button("Accept"); // Yes button for the user.
         final Button noButton = new Button("Cancel"); // No button for the user.
-        hbox.getChildren().addAll(region);
-        vbox.getChildren().addAll(wview, hbox, yesButton, noButton);
+        VBox areaRight = new VBox();
+        areaRight.setPrefSize(70, 20);
+        areaRight.setMargin(areaRight, new Insets(0, 0, 0, 50));
+        hbox.getChildren().addAll(yesButton, areaRight, noButton);
+        vbox.getChildren().addAll(wview, hbox);
+        pane.getChildren().add(vbox);
         String css = Objects.requireNonNull(SettingsViewFactory.class.getResource("/css/loinc2hpo.css")).toExternalForm();
+        Scene scene = new Scene(pane, PREFERRED_WIDTH, PREFERRED_HEIGHT);
         scene.getStylesheets().add(css);
 
         yesButton.setOnAction(e -> {
-            cancel.set(false);
+            acceptProperty.set(true);
             close();
         });
 
         noButton.setOnAction(e -> {
-            cancel.set(true);
+            acceptProperty.set(false);
             close();
         });
 
@@ -104,7 +83,7 @@ public class BooleanBox {
         window.close();
     }
 
-    public void addCancelListener(final ChangeListener<Boolean> listener) {
-        cancel.addListener(listener);
+    public void addAcceptListener(final ChangeListener<Boolean> listener) {
+        acceptProperty.addListener(listener);
     }
 }
