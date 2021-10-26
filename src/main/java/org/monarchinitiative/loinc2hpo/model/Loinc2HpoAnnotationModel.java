@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * This class is responsible for managing the annotation information for a
  * LOINC coded lab test. In essence, is uses a map to record mappings from an
  * interpretation code to a HPO term (plus a negation boolean value). The key
- * of this map,  org.monarchinitiative.loinc2hpocore.codesystems.Code
+ * of this map,  {@link org.monarchinitiative.loinc2hpo.model.codesystems.Code}
  * must have two parts (code system and
  * actual code). We use a set of internal codes for the annotation, which is
  * a subset of FHIR codes:

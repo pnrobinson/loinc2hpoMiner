@@ -24,42 +24,64 @@ public class LoincVsHpoQuery {
     }
 
 
-    public List<HpoClassFound> query_manual(String keysString,
-                                            LoincLongNameComponents loincLongNameComponents) {
-        String [] keys = keysString.split(" ");
-        return query_manual(List.of(keys), loincLongNameComponents);
+
+
+    public List<HpoClassFound> queryByString(String keysString,
+                         LoincLongNameComponents loincLongNameComponents) {
+        String [] keys = keysString.split("[ ,-;]");
+        return queryByString(List.of(keys), loincLongNameComponents);
     }
+
+    public List<HpoClassFound> queryByString(List<String> queries,
+                                             LoincLongNameComponents loincLongNameComponents) {
+        return query_impl(queries, loincLongNameComponents);
+    }
+
+
+    public List<HpoClassFound> queryByLoincId(String keysString,
+                                              LoincLongNameComponents loincLongNameComponents) {
+        String [] keys = keysString.split(" ");
+        return queryByLoincId(List.of(keys), loincLongNameComponents);
+    }
+
+
     /**
      * A method to do manual query with provided keys (literally)
      */
-    public List<HpoClassFound> query_manual(List<String> keys,
-                                                   LoincLongNameComponents loincLongNameComponents) {
+    public List<HpoClassFound> queryByLoincId(List<String> keys,
+                                              LoincLongNameComponents loincLongNameComponents) {
         if (keys == null || keys.isEmpty()) {
             throw new IllegalArgumentException();
         } else {
-           //HpoClassFound(String id, String label, String definition, LoincLongNameComponents loinc) {
-            List<HpoClassFound> foundList = new ArrayList<>();
             List<String> searchItems = new ArrayList<>();
-            searchItems.addAll(keys);
             searchItems.add(loincLongNameComponents.getLoincTissue());
             searchItems.add(loincLongNameComponents.getLoincMethod());
             searchItems.add(loincLongNameComponents.getLoincParameter());
             searchItems.add(loincLongNameComponents.getLoincType());
-            searchItems = searchItems.stream().filter(s -> ! omitWords.contains(s)).collect(Collectors.toList());
-            LOGGER.info("got {} search items",searchItems.size());
-            for (Term term : hpo.getTermMap().values()) {
-                Set<String> words = getWords(term);
-                for (var word : searchItems) {
-                    if (words.contains(word)) {
-                        foundList.add(new HpoClassFound(term, loincLongNameComponents));
-                        break;
-                    }
-                }
-            }
-            LOGGER.info("got {} found items",foundList.size());
-            return foundList;
+            return query_impl(searchItems, loincLongNameComponents);
         }
     }
+
+
+    private List<HpoClassFound> query_impl(List<String> items, LoincLongNameComponents loincLongNameComponents) {
+        items = items.stream().filter(s -> ! omitWords.contains(s)).collect(Collectors.toList());
+        LOGGER.info("got {} search items",items.size());
+        List<HpoClassFound> foundList = new ArrayList<>();
+        for (Term term : hpo.getTermMap().values()) {
+            Set<String> words = getWords(term);
+            for (var word : items) {
+                if (words.contains(word)) {
+                    foundList.add(new HpoClassFound(term, loincLongNameComponents));
+                    break;
+                }
+            }
+        }
+        LOGGER.info("got {} found items",foundList.size());
+        return foundList;
+    }
+
+
+
 
     private Set<String> getWords(Term term) {
         Set<String> words = new HashSet<>();

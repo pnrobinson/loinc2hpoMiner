@@ -3,7 +3,6 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Accordion?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.ContextMenu?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
@@ -59,37 +58,37 @@
        <SplitPane dividerPositions="0.4605475040257649" orientation="VERTICAL" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1">
            <SplitPane dividerPositions="0.6185308848080133">
                <VBox>
+               <GridPane>
+                 <columnConstraints>
+                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="465.0" minWidth="10.0" prefWidth="302.0" />
+                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="639.0" minWidth="10.0" prefWidth="639.0" />
+                 </columnConstraints>
+                 <rowConstraints>
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                 </rowConstraints>
+                  <children>
+                     <Button mnemonicParsing="false" onAction="#searchHpoByString" stylesheets="@../css/loinc2hpo.css" text="Search HPO">
+                        <GridPane.margin>
+                           <Insets left="20.0" />
+                        </GridPane.margin>
+                     </Button>
+                          <TextField fx:id="userInputForManualQuery" onAction="#handleManualQueryButton" prefHeight="24.0" prefWidth="733.0" promptText="comma seperated keys" GridPane.columnIndex="1">
+                        <padding>
+                           <Insets left="10.0" right="10.0" />
+                        </padding>
+                          </TextField>
+                          <Button fx:id="searchHpoByLoincButton" mnemonicParsing="false" onAction="#searchHpoByLoinc" stylesheets="@../css/loinc2hpo.css" text="Search HPO by LOINC" GridPane.rowIndex="1">
+                        <GridPane.margin>
+                           <Insets left="20.0" />
+                        </GridPane.margin>
+                          </Button>
+                  </children>
+               </GridPane>
                    <HBox VBox.vgrow="NEVER">
                        <VBox.margin>
                            <Insets />
                        </VBox.margin>
-                       <Button fx:id="initLOINCtableButton" mnemonicParsing="false" onAction="#initLOINCtable" stylesheets="@../css/loinc2hpo.css" text="Inititialize">
-                           <HBox.margin>
-                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                           </HBox.margin>
-                       </Button>
-                       <Button fx:id="filterButton" mnemonicParsing="false" onAction="#handleLoincFiltering" stylesheets="@../css/loinc2hpo.css" text="Filter">
-                           <HBox.margin>
-                               <Insets bottom="5.0" left="30.0" right="5.0" top="5.0" />
-                           </HBox.margin>
-                       </Button>
-                       <Button fx:id="searchForLOINCIdButton" mnemonicParsing="false" onAction="#search" stylesheets="@../css/loinc2hpo.css" text="Search">
-                           <HBox.margin>
-                               <Insets bottom="5.0" left="30.0" right="5.0" top="5.0" />
-                           </HBox.margin>
-                       </Button>
-                       <TextField fx:id="loincSearchTextField" onAction="#search" HBox.hgrow="ALWAYS">
-                           <HBox.margin>
-                               <Insets bottom="5.0" left="20.0" right="5.0" top="5.0" />
-                           </HBox.margin>
-                       </TextField>
-                   </HBox>
-                   <HBox VBox.vgrow="NEVER">
-                       <Label stylesheets="@../css/loinc2hpo.css" text="Candidate HPO classes:">
-                           <HBox.margin>
-                               <Insets bottom="10.0" left="20.0" top="40.0" />
-                           </HBox.margin>
-                       </Label>
                    </HBox>
                    <GridPane>
                        <columnConstraints>
@@ -126,7 +125,7 @@
                            </GridPane.margin>
                        </Label>
                    </GridPane>
-                   <ListView fx:id="hpoListView" VBox.vgrow="ALWAYS">
+                   <ListView fx:id="hpoListView" prefHeight="144.0" prefWidth="882.0" VBox.vgrow="ALWAYS">
                        <contextMenu>
                            <ContextMenu fx:id="contextMenu">
                                <items>
@@ -144,36 +143,58 @@
                            <Insets bottom="20.0" left="10.0" right="10.0" />
                        </VBox.margin>
                    </ListView>
+               <GridPane>
+                 <columnConstraints>
+                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="454.0" minWidth="10.0" prefWidth="274.0" />
+                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="751.0" minWidth="10.0" prefWidth="660.0" />
+                 </columnConstraints>
+                 <rowConstraints>
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                 </rowConstraints>
+                  <children>
+                          <Button fx:id="initLOINCtableButton" mnemonicParsing="false" onAction="#initLOINCtable" stylesheets="@../css/loinc2hpo.css" text="Inititialize">
+                        <GridPane.margin>
+                           <Insets left="20.0" />
+                        </GridPane.margin>
+                          </Button>
+                          <Button fx:id="userSuppliedLoincCodes" mnemonicParsing="false" onAction="#handleLoincFiltering" stylesheets="@../css/loinc2hpo.css" text="Load user-supplied LOINC codes" GridPane.columnIndex="1">
+                        <GridPane.margin>
+                           <Insets left="20.0" />
+                        </GridPane.margin>
+                          </Button>
+                          <Button fx:id="searchForLOINCIdButton" mnemonicParsing="false" onAction="#searchByLoincId" stylesheets="@../css/loinc2hpo.css" text="Search by LOINC id" GridPane.rowIndex="1">
+                        <GridPane.margin>
+                           <Insets left="20.0" />
+                        </GridPane.margin>
+                          </Button>
+                          <TextField fx:id="loincSearchTextField" onAction="#searchByLoincId" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                        <GridPane.margin>
+                           <Insets left="20.0" right="20.0" />
+                        </GridPane.margin>
+                          </TextField>
+                  </children>
+               </GridPane>
                    <HBox prefHeight="0.0" prefWidth="737.0">
                        <VBox.margin>
                            <Insets />
                        </VBox.margin>
-                       <Button fx:id="autoQueryButton" mnemonicParsing="false" onAction="#searchHpoTermButtonClicked" stylesheets="@../css/loinc2hpo.css" text="Search HPO terms">
-                           <HBox.margin>
-                               <Insets bottom="5.0" left="20.0" top="10.0" />
-                           </HBox.margin>
-                       </Button>
-                       <TextField fx:id="userInputForManualQuery" onAction="#handleManualQueryButton" prefHeight="37.0" prefWidth="330.0" promptText="comma seperated keys" HBox.hgrow="ALWAYS">
-                           <HBox.margin>
-                               <Insets bottom="5.0" left="20.0" top="10.0" />
-                           </HBox.margin>
-                       </TextField>
-                       <Button fx:id="hpoChildTermsButton" mnemonicParsing="false" onAction="#descendantsOfMarkedTerm" prefWidth="190.0" stylesheets="@../css/loinc2hpo.css" text="TODO">
-                           <HBox.margin>
-                               <Insets left="5.0" right="5.0" top="10.0" />
-                           </HBox.margin>
-                       </Button>
                    </HBox>
                </VBox>
                <VBox>
+               <HBox prefHeight="100.0" prefWidth="200.0">
+                  <children>
+                     <Label stylesheets="@../css/loinc2hpo.css" text="Create LOINC2HPO Annotation" />
+                  </children>
+               </HBox>
                    <HBox spacing="20.0">
                        <VBox.margin>
                            <Insets left="20.0" top="5.0" />
                        </VBox.margin>
                        <Button fx:id="createAnnotationButton" mnemonicParsing="false" onAction="#createQnAnnotation" stylesheets="@../css/loinc2hpo.css" text="Qn" />
-                       <Button fx:id="allAnnotationsButton" mnemonicParsing="false" onAction="#createOrdAnnotation" stylesheets="@../css/loinc2hpo.css" text="Ord"/>
-                       <Button fx:id="nominalAnnotationButton" mnemonicParsing="false" onAction="#createNomAnnotation" stylesheets="@../css/loinc2hpo.css" text="Nom"/>
-                       <Button fx:id="clearButton" mnemonicParsing="false" onAction="#handleClear" stylesheets="@../css/loinc2hpo.css" text="Clear" >
+                       <Button fx:id="allAnnotationsButton" mnemonicParsing="false" onAction="#createOrdAnnotation" stylesheets="@../css/loinc2hpo.css" text="Ord" />
+                       <Button fx:id="nominalAnnotationButton" mnemonicParsing="false" onAction="#createNomAnnotation" stylesheets="@../css/loinc2hpo.css" text="Nom" />
+                       <Button fx:id="clearButton" mnemonicParsing="false" onAction="#handleClear" stylesheets="@../css/loinc2hpo.css" text="Clear">
                            <HBox.margin>
                                <Insets left="40.0" />
                            </HBox.margin>
@@ -185,17 +206,14 @@
                        </VBox.margin>
                    </TextArea>
                    <AnchorPane prefHeight="429.0" prefWidth="504.0">
-                       <TableView fx:id="hpoAnnotationTable" prefHeight="430.0" prefWidth="431.0"
-                                  AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
-                                  AnchorPane.topAnchor="0.0">
+                       <TableView fx:id="hpoAnnotationTable" prefHeight="430.0" prefWidth="431.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                            <columns>
-                               <TableColumn fx:id="hpoAnnotationType" prefWidth="75.0" resizable="false" text="Type"/>
-                               <TableColumn fx:id="hpoAnnotationTid" prefWidth="75.0" resizable="false" text="TermId"/>
-                               <TableColumn fx:id="hpoAnnotationTermLabel" prefWidth="280.0" resizable="false"
-                                            text="Label"/>
+                               <TableColumn fx:id="hpoAnnotationType" prefWidth="75.0" resizable="false" text="Type" />
+                               <TableColumn fx:id="hpoAnnotationTid" prefWidth="75.0" resizable="false" text="TermId" />
+                               <TableColumn fx:id="hpoAnnotationTermLabel" prefWidth="280.0" resizable="false" text="Label" />
                            </columns>
                            <padding>
-                               <Insets bottom="2.0" left="2.0" right="2.0" top="2.0"/>
+                               <Insets bottom="2.0" left="2.0" right="2.0" top="2.0" />
                            </padding>
                            <contextMenu>
                                <ContextMenu>
@@ -236,7 +254,6 @@
                            <AnchorPane>
                                <TableView fx:id="loincAnnotationTableView" AnchorPane.bottomAnchor="40.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="40.0">
                                    <columns>
-                                       <TableColumn fx:id="loincFlagColumn" prefWidth="50.0" resizable="false" text="Flag" />
                                        <TableColumn fx:id="loincNumberColumn" prefWidth="150.0" resizable="false" text="LOINC Num" />
                                        <TableColumn fx:id="loincScaleColumn" resizable="false" text="Scale" />
                                        <TableColumn fx:id="belowNormalHpoColumn" prefWidth="200.0" resizable="false" text="Below normal" />

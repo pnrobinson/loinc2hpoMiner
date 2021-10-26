@@ -8,13 +8,11 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
@@ -72,7 +70,7 @@ public class Loinc2HpoMainController {
     @FXML
     private Button initLOINCtableButton;
     @FXML
-    private Button filterButton;
+    private Button userSuppliedLoincCodes;
     @FXML
     private Button searchForLOINCIdButton;
     @FXML
@@ -131,7 +129,7 @@ public class Loinc2HpoMainController {
     private ContextMenu contextMenu;
 
     @FXML
-    private Button autoQueryButton;
+    private Button searchHpoByLoincButton;
 
 
     @FXML
@@ -174,8 +172,7 @@ public class Loinc2HpoMainController {
     private TableColumn<Loinc2HpoAnnotationModel, String> aboveNormalHpoColumn;
     @FXML
     private TableColumn<Loinc2HpoAnnotationModel, String> loincScaleColumn;
-    @FXML
-    private TableColumn<Loinc2HpoAnnotationModel, String> loincFlagColumn;
+
     @FXML
     private TableColumn<Loinc2HpoAnnotationModel, String> noteColumn;
     final ObservableList<String> userCreatedLoincLists = FXCollections
@@ -226,13 +223,12 @@ public class Loinc2HpoMainController {
         //this.hpoReadyLabel.textProperty().bind(task.messageProperty());
         //task.setOnSucceeded(e -> this.hpoReadyLabel.textProperty().unbind());
         this.executor.submit(task);
-        hpoChildTermsButton.setTooltip(new Tooltip("Suggest new HPO terms"));
-        filterButton.setTooltip(new Tooltip("Filter Loinc by providing a Loinc list in txt file"));
+        userSuppliedLoincCodes.setTooltip(new Tooltip("Filter Loinc by providing a Loinc list in txt file"));
         clearButton.setTooltip(new Tooltip("Clear all textfields"));
         allAnnotationsButton.setTooltip(new Tooltip("Display annotations for currently selected Loinc code"));
         initLOINCtableButton.setTooltip(new Tooltip("Ingest Loinc Core Table and HP (Download the files first)."));
         searchForLOINCIdButton.setTooltip(new Tooltip("Search Loinc with a Loinc code or name"));
-        autoQueryButton.setTooltip(new Tooltip("Find candidate HPO terms"));
+        searchHpoByLoincButton.setTooltip(new Tooltip("Find candidate HPO terms"));
 
         hpoListView.setCellFactory(new Callback<>() {
             @Override
@@ -413,13 +409,10 @@ public class Loinc2HpoMainController {
                 return new ReadOnlyStringWrapper(termMap.get(termId).getName());
             }
         });
-        loincFlagColumn.setSortable(true);
-        loincFlagColumn.setCellValueFactory(cdf -> cdf.getValue() != null && cdf.getValue().getFlag() ?
-                new ReadOnlyStringWrapper("Y") : new ReadOnlyStringWrapper(""));
         noteColumn.setSortable(true);
         noteColumn.setCellValueFactory(cdf -> cdf.getValue() == null ? new ReadOnlyStringWrapper("") :
                 new ReadOnlyStringWrapper(cdf.getValue().getNote()));
-        updateSummary();
+        updateAnnotationSummaryWebview();
         refreshLoinc2HpoAnnotationTable();
     }
 
@@ -450,12 +443,8 @@ public class Loinc2HpoMainController {
     }
 
 
-    private void updateHpoTermListView(LoincEntry entry) {
-        String name = entry.getLongName();
-        System.err.println("Got name: " + name);
-        hpoListView.getItems().clear();
-        LoincVsHpoQuery loincVsHpoQuery = optionalResources.getLoincVsHpoQuery();
-        List<HpoClassFound> result = loincVsHpoQuery.query_manual(name, entry.getLongNameComponents());
+
+    private void updateHpoTermListView( List<HpoClassFound> result) {
         //among found terms, show those that are 1) HPO terms 2) not obsolete
         hpoQueryResult.addAll(result);
         hpoQueryResult.sort((o1, o2) -> o2.getScore() - o1.getScore());
@@ -486,7 +475,34 @@ public class Loinc2HpoMainController {
     }
 
     @FXML
-    private void searchHpoTermButtonClicked(ActionEvent e) {
+    private void searchHpoByString(ActionEvent e) {
+        e.consume();
+        LoincEntry entry = loincTableView.getSelectionModel()
+                .getSelectedItem();
+        if (entry == null) {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("No Selection ERROR");
+            alert.setHeaderText("Select a row in Loinc table");
+            alert.setContentText("A loinc code is required for ranking " +
+                    "candidate HPO terms. Select one row in the loinc " +
+                    "table and query again.");
+            alert.showAndWait();
+            return;
+        }
+        String query = userInputForManualQuery.getText().trim();
+        String name = entry.getLongName();
+        System.err.println("Got name: " + name);
+        hpoListView.getItems().clear();
+        LoincVsHpoQuery loincVsHpoQuery = optionalResources.getLoincVsHpoQuery();
+        List<HpoClassFound> foundHpoList = loincVsHpoQuery.queryByString(name, entry.getLongNameComponents());
+        updateHpoTermListView(foundHpoList);
+    }
+
+    /**
+     * The user has selected a row in the LOINC table and searches for HPO terms with matching words.
+     */
+    @FXML
+    private void searchHpoByLoinc(ActionEvent e) {
         e.consume();
         LoincEntry entry = loincTableView.getSelectionModel()
                 .getSelectedItem();
@@ -501,12 +517,16 @@ public class Loinc2HpoMainController {
             return;
         }
         LOGGER.info(String.format("Start auto query for \"%s\"by pressing button", entry));
-        updateHpoTermListView(entry);
+        String name = entry.getLongName();
+        System.err.println("Got name: " + name);
+        hpoListView.getItems().clear();
+        LoincVsHpoQuery loincVsHpoQuery = optionalResources.getLoincVsHpoQuery();
+        List<HpoClassFound> foundHpoList = loincVsHpoQuery.queryByLoincId(name, entry.getLongNameComponents());
+        updateHpoTermListView(foundHpoList);
     }
 
     @FXML
     private void handleManualQueryButton(ActionEvent e) {
-
         e.consume();
         LoincEntry entry = loincTableView.getSelectionModel().getSelectedItem();
         if (entry == null) {
@@ -536,7 +556,7 @@ public class Loinc2HpoMainController {
         String name = entry.getLongName();
         LoincLongNameComponents loincLongNameComponents = LoincLongNameParser.parse(name);
         LoincVsHpoQuery loincVsHpoQuery = optionalResources.getLoincVsHpoQuery();
-        List<HpoClassFound> queryResults = loincVsHpoQuery.query_manual(keysInList, loincLongNameComponents);
+        List<HpoClassFound> queryResults = loincVsHpoQuery.queryByLoincId(keysInList, loincLongNameComponents);
         if (queryResults.size() != 0) {
             ObservableList<HpoClassFound> items = FXCollections.observableArrayList();
             items.addAll(queryResults);
@@ -603,8 +623,14 @@ public class Loinc2HpoMainController {
         System.err.println("[showAnnotationWindow]");
     }
 
+
+
+
+    /**
+     * Search for LOINC entries by LOINC id
+     */
     @FXML
-    private void search(ActionEvent e) {
+    private void searchByLoincId(ActionEvent e) {
         e.consume();
         String query = this.loincSearchTextField.getText().trim();
         if (query.isEmpty()) return;
@@ -662,137 +688,6 @@ public class Loinc2HpoMainController {
         loincTableView.getItems().clear();
         loincTableView.getItems().addAll(filteredLoincEntries);
         accordion.setExpandedPane(loincTableTitledpane);
-    }
-
-
-
-
-
-    @FXML
-    private void setLoincGroupColor(ActionEvent e) {
-        LOGGER.trace("user wants to set the color of LOINC groups");
-        Stage window = new Stage();
-
-        VBox root = new VBox();
-        root.setSpacing(10);
-
-
-        ToolBar toolBar = new ToolBar();
-        final ComboBox<String> loincGroupCombo = new ComboBox<>();
-
-        loincGroupCombo.getItems().addAll(userCreatedLoincLists);
-
-        final ColorPicker colorPicker = new ColorPicker();
-        loincGroupCombo.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            if (observable != null) {
-                final String colorString = settings.getUserCreatedLoincListsColor().get(newValue);
-                if (colorString != null) {
-                    final Color color = Color.web(colorString);
-                    colorPicker.setValue(color);
-                }
-
-            }
-        });
-        loincGroupCombo.getSelectionModel().select(0);
-
-        toolBar.getItems().addAll(loincGroupCombo, colorPicker);
-
-        GridPane gridPane = new GridPane();
-        gridPane.setHgap(10);
-        gridPane.setVgap(10);
-        gridPane.setPadding(new Insets(2));
-
-        Map<String, TextField> gridPaneColors = new HashMap<>();
-        for (int i = 0; i < userCreatedLoincLists.size(); i++) {
-            TextField name = new TextField(userCreatedLoincLists.get(i));
-            gridPane.add(name, 0, i);
-            TextField color = new TextField();
-            color.setBackground(new Background(new BackgroundFill(Color.web(settings.getUserCreatedLoincListsColor().get(name.getText())), null, null)));
-            gridPane.add(color, 1, i);
-            gridPaneColors.put(name.getText(), color);
-            LOGGER.trace("color" + color.getBackground().getFills().toString());
-        }
-
-
-        colorPicker.setOnAction(t -> {
-            settings.getUserCreatedLoincListsColor().put(loincGroupCombo.getSelectionModel().getSelectedItem(), colorPicker.getValue().toString());
-            LOGGER.trace("new color: " + settings.getUserCreatedLoincListsColor().get(loincGroupCombo.getSelectionModel().getSelectedItem()));
-            gridPaneColors.get(loincGroupCombo.getSelectionModel().getSelectedItem()).setBackground(new Background(new BackgroundFill(colorPicker.getValue(), null, null)));
-            changeColorLoincTableView();
-            // Settings.writeSettings(settings, Loinc2HpoPlatform.getPathToSettingsFile());
-        });
-
-        root.getChildren().addAll(toolBar, gridPane);
-        Scene scene = new Scene(root, 400, 400);
-        window.setScene(scene);
-        window.showAndWait();
-    }
-
-    /**
-     * This function is normally not useful because of MainController::openSession()
-     */
-    private void initializeUserCreatedLoincListsIfNecessary() {
-        //execute the functionalities only once in each secession
-//        if (!appResources.getUserCreatedLoincLists().isEmpty()) {
-//            logger.trace("initializeUserCreatedLoincListsIfNecessary(): 1111");
-//            return;
-//        }
-        //by default, there will be two user created lists
-        //This is not scaling well. @TODO: consider other ways
-        //consider detecting existing lists by scanning the folder
-        List<String> initialListNames = new ArrayList<>();
-        initialListNames.add(LOINCWAITING4NEWHPO);
-        initialListNames.add(LOINCUNABLE2ANNOTATE);
-        initialListNames.add(UNSPECIFIEDSPECIMEN);
-        initialListNames.add(LOINC4QC);
-        userCreatedLoincLists.addAll(initialListNames);
-        LOGGER.trace("initializeUserCreatedLoincListsIfNecessary(): 2222");
-        /*
-        //create a menuitem for each and add to two menus; also create a list to record data
-        groupUngroup2LoincListButton.getItems().clear();
-        exportLoincListButton.getItems().clear();
-        initialListNames.forEach(p -> {
-            groupUngroup2LoincListButton.getItems().add(new MenuItem(p));
-            exportLoincListButton.getItems().add(new MenuItem(p));
-            appTempData.addUserCreatedLoincList(p, new ArrayList<>());
-        });
-         */
-    }
-
-
-    private void initializeMenuItemsForFilteredLists() {
-//        if (!appTempData.getFilteredLoincListsMap().isEmpty()) {
-//            loincListsButton.setDisable(false);
-//            loincListsButton.getItems().clear();
-//            List<MenuItem> menuItems = new ArrayList<>();
-//            appTempData.getFilteredLoincListsMap().keySet().forEach(p -> {
-//                MenuItem menuItem = new MenuItem(p);
-//                menuItems.add(menuItem);
-//            });
-//            loincListsButton.getItems().addAll(menuItems);
-//            logger.trace("menu items added");
-//            //loincListsButton.getItems().forEach(p -> logger.trace("current: " + p.getText()));
-//            loincListsButton.getItems().forEach(p -> p.setOnAction((event) -> {
-//                logger.trace(p.getText());
-//                List<LoincEntry> loincList = appTempData.getLoincList(p.getText());
-//                if (loincList != null && !loincList.isEmpty()) {
-//                    loincTableView.getItems().clear();
-//                    loincTableView.getItems().addAll(loincList);
-//                }
-//            } ));
-//
-//        } else {
-//            loincListsButton.setDisable(true);
-//        }
-    }
-
-    @FXML
-    private void buildContextMenuForLoinc(Event e) {
-        e.consume();
-        LOGGER.trace("context memu for loinc table requested");
-        initializeMenuItemsForFilteredLists();
-        //initializeUserCreatedLoincListsIfNecessary(); //usually not run
-        LOGGER.trace("exit buildContextMenuForLoinc()");
     }
 
 
@@ -1165,96 +1060,11 @@ public class Loinc2HpoMainController {
         annotationNoteField.clear();
         this.hpoAnnotationTable.getItems().clear();
         refreshLoinc2HpoAnnotationTable();
+        updateAnnotationSummaryWebview();
         if (createAnnotationButton.getText().equals("Save")) {
             createAnnotationButton.setText("Create annotation");
         }
-        changeColorLoincTableView();
     }
-
-
-    //change the color of rows to green after the loinc code has been annotated
-    void changeColorLoincTableView() {
-        /*
-        logger.debug("enter changeColorLoincTableView");
-        logger.info("annotated LOINC count: " + appResources.getLoincAnnotationMap().size());
-        logger.info("num Loinc Categories: " + appResources.getUserCreatedLoincLists().keySet());
-        logger.info("unable_to_annotate: " + appResources.getUserCreatedLoincLists().get("unspecified_specimen").size());
-        logger.info("colors: " + appResources.getUserCreatedLoincListsColor().values());
-        loincIdTableColumn.setCellFactory(x -> new TableCell<LoincEntry, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty){
-                super.updateItem(item, empty);
-                //if(item != null && !empty) {
-                if(!empty) {
-                    setText(item);
-                    try {
-                        if(appResources.getLoincAnnotationMap().containsKey(new LoincId(item))) {
-                            TableRow<LoincEntry> currentRow = getTableRow();
-                            currentRow.setStyle("-fx-background-color: cyan");
-                        } else {
-                            TableRow<LoincEntry> currentRow = getTableRow();
-                            LoincId loincId = new LoincId(item);
-                            List<String> inList = appResources.getUserCreatedLoincLists().entrySet()
-                                    .stream()
-                                    .filter(entry -> entry.getValue().contains(loincId))
-                                    .map(Map.Entry::getKey)
-                                    .collect(Collectors.toList());
-                            if (!inList.isEmpty()) {
-                                List<Color> colors = inList.stream()
-                                    .map(l -> settings.getUserCreatedLoincListsColor().get(l))
-                                    .filter(Objects::nonNull)
-                                    .map(Color::web)
-                                    .collect(Collectors.toList());
-                                if (colors.isEmpty()) {
-                                    currentRow.setStyle("");
-                                } else {
-                                    String backgroundColorValue = colors.get(0).toString(); //just use the first color
-                                    logger.trace(backgroundColorValue);
-                                    logger.trace(String.format("#%s", backgroundColorValue.substring(2,8).toUpperCase()));
-                                    currentRow.setStyle("-fx-background-color: " + String.format("#%s", backgroundColorValue.substring(2,8).toUpperCase()));
-                                    //Cannot use set background. It DOES NOT work!
-                                    //currentRow.setBackground(new Background(new BackgroundFill(colors.get(0), null, null)));
-                                }
-
-                            } else {
-                                currentRow.setStyle("");
-                            }
-                        }
-                    } catch (MalformedLoincCodeException e) {
-                        //do nothing
-                        logger.error("should never happen:xdeide");
-                    }
-                } else {
-                    setText(null);
-                    getTableRow().setStyle("");
-                    //logger.trace("changecolor:44444");
-                }
-            }
-
-        });
-
-         */
-        LOGGER.debug("exit changeColorLoincTableView");
-    }
-
-
-
-
-    @FXML
-    private void handleDeleteCodedAnnotation(ActionEvent event) {
-        /*
-        event.consume();
-        logger.debug("user wants to delete an annotation");
-        logger.debug("tempAdvancedAnnotations size: " + tempAdvancedAnnotations.size());
-        AdvancedAnnotationTableComponent selectedToDelete = advancedAnnotationTable.getSelectionModel().getSelectedItem();
-        if (selectedToDelete != null) {
-            tempAdvancedAnnotations.remove(selectedToDelete);
-        }
-        logger.debug("tempAdvancedAnnotations size: " + tempAdvancedAnnotations.size());
-
-         */
-    }
-
 
     @FXML
     public void downloadHPO(ActionEvent e) {
@@ -1386,7 +1196,6 @@ public class Loinc2HpoMainController {
     public boolean isSessionDataChanged() {
         //Lazy implementation
         //whenever createAnnotation, saveAnnotation, group/ungroup loinc or create loinc list are called, it return true
-        //return appTempData.isSessionChanged();
         System.err.println("WARNING -- isSessionDataChanged not implemented");
         return true;
     }
@@ -1445,46 +1254,32 @@ public class Loinc2HpoMainController {
     }
 
     // Annotation table
-    private String getHTML() {
-        String html = "<html><body>\n" +
+    private String getAnnotationSummaryHTML() {
+        return "<html><body>\n" +
                 inlineCSS() +
-                "<h1>LOINC2HPO Biocuration: Summary</h1>";
-        if ("" != null) {
-            return html + getLoincAnnotationData() + "</body></html>";
-        } else {
-            return html + "</body></html>";
-        }
-
-
+                "<ul><li>Number of HPO Terms " + optionalResources.getOntology().countNonObsoleteTerms() +"</li>" +
+                "<li>Number of annotation LOINC codes: " + optionalResources.getLoincAnnotationMap().size() + "</li></ol>"
+         + "</body></html>";
     }
 
-    public void updateSummary() {
+    public void updateAnnotationSummaryWebview() {
         runLater(() -> {
             WebView wview = new WebView();
             WebEngine contentWebEngine = wview.getEngine();
-            contentWebEngine.loadContent(getHTML());
+            contentWebEngine.loadContent(getAnnotationSummaryHTML());
+            this.vbox4wv.getChildren().clear();
             this.vbox4wv.getChildren().addAll(wview);
         });
     }
 
-    private String getLoincAnnotationData() {
-        StringBuilder sb = new StringBuilder();
-        /*
-        sb.append(String.format("<li>Number of HPO Terms: %d</li>",appResources.getHpo().countNonObsoleteTerms()));
-        sb.append(String.format("<li>Number of annotation LOINC codes: %d</li>",appResources.getLoincAnnotationMap().size()));
-          */
-        return String.format("<ul>%s</ul>", sb.toString());
 
-    }
 
 
     private static String inlineCSS() {
         return "<head><style>\n" +
                 "  html { margin: 0; padding: 0; }" +
-                "body { font: 100% georgia, sans-serif; line-height: 1.88889;color: #001f3f; margin: 10; padding: 10; }" +
+                "body { font: 75% georgia, sans-serif; line-height: 1.88889;color: #001f3f; margin: 10; padding: 10; }" +
                 "p { margin-top: 0;text-align: justify;}" +
-                "h2,h3 {font-family: 'serif';font-size: 1.4em;font-style: normal;font-weight: bold;" +
-                "letter-spacing: 1px; margin-bottom: 0; color: #001f3f;}" +
                 "  </style></head>";
     }
 
