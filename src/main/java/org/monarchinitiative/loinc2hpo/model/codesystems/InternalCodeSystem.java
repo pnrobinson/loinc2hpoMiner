@@ -4,27 +4,24 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class InternalCodeSystem {
-    public static final String SYSTEMNAME = "FHIR";
-    private static final Map<InternalCode, Code> internalCodeMap;
+    private static final Map<InternalCode, OutcomeCode> internalCodeMap;
 
     static {
         internalCodeMap = new HashMap<>();
-        internalCodeMap.put(InternalCode.A, new Code(SYSTEMNAME, "A", "abnormal"));
-        internalCodeMap.put(InternalCode.L, new Code(SYSTEMNAME, "L", "low"));
-        internalCodeMap.put(InternalCode.N, new Code(SYSTEMNAME, "N", "normal"));
-        internalCodeMap.put(InternalCode.H, new Code(SYSTEMNAME, "H", "high"));
-        internalCodeMap.put(InternalCode.U, new Code(SYSTEMNAME, "U", "unknown"));
-        internalCodeMap.put(InternalCode.NEG, new Code(SYSTEMNAME, "NEG",
-                "absent"));
-        internalCodeMap.put(InternalCode.POS, new Code(SYSTEMNAME, "POS",
-                "present"));
+        internalCodeMap.put(InternalCode.A, new OutcomeCode( InternalCode.A, "abnormal"));
+        internalCodeMap.put(InternalCode.L, new OutcomeCode(InternalCode.L, "low"));
+        internalCodeMap.put(InternalCode.N, new OutcomeCode(InternalCode.N, "normal"));
+        internalCodeMap.put(InternalCode.H, new OutcomeCode(InternalCode.H, "high"));
+        internalCodeMap.put(InternalCode.U, new OutcomeCode(InternalCode.U, "unknown"));
+        internalCodeMap.put(InternalCode.NEG, new OutcomeCode(InternalCode.NEG, "absent"));
+        internalCodeMap.put(InternalCode.POS, new OutcomeCode(InternalCode.POS,"present"));
     }
 
-    public static Code getCode(InternalCode internalCode){
+    public static OutcomeCode getCode(InternalCode internalCode){
         return internalCodeMap.get(internalCode);
     }
 
-    public static Code abnormal() {
+    public static OutcomeCode abnormal() {
         return internalCodeMap.get(InternalCode.A);
     }
 

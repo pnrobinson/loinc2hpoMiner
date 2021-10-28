@@ -2,6 +2,8 @@ package org.monarchinitiative.loinc2hpo.model;
 
 
 import org.monarchinitiative.loinc2hpo.except.Loinc2HpoRunTimeException;
+import org.monarchinitiative.loinc2hpo.model.codesystems.InternalCode;
+import org.monarchinitiative.loinc2hpo.model.codesystems.OutcomeCode;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -16,19 +18,19 @@ public class Loinc2HpoAnnotationCsvEntry {
     private String loincId;
     private String loincScale;
     private String system;
-    private String code;
-    private String hpoTermId;
-    private String isNegated;
-    private String createdOn;
-    private String createdBy;
-    private String lastEditedOn;
-    private String lastEditedBy;
+    private final OutcomeCode code;
+    private final String hpoTermId;
+    private final String isNegated;
+    private final String createdOn;
+    private final String createdBy;
+    private final String lastEditedOn;
+    private final String lastEditedBy;
     private String version;
-    private String isFinalized;
-    private String comment;
+    private final String isFinalized;
+    private final String comment;
 
 
-    public Loinc2HpoAnnotationCsvEntry(String loincId, String loincScale, String system, String code, String hpoTermId, String isNegated, String createdOn, String createdBy, String lastEditedOn, String lastEditedBy, String version, String isFinalized, String comment) {
+    public Loinc2HpoAnnotationCsvEntry(String loincId, String loincScale, String system, OutcomeCode code, String hpoTermId, String isNegated, String createdOn, String createdBy, String lastEditedOn, String lastEditedBy, String version, String isFinalized, String comment) {
         this.loincId = loincId;
         this.loincScale = loincScale;
         this.system = system;
@@ -65,7 +67,7 @@ public class Loinc2HpoAnnotationCsvEntry {
                 String loincId = elements[0];
                 String loincScale = elements[1];
                 String system = elements[2];
-                String code = elements[3];
+                OutcomeCode code = InternalCode.fromString(elements[3]);
                 String hpoTermId = elements[4];
                 String isNegated = elements[5];
                 String createdOn = elements[6];
@@ -103,80 +105,40 @@ public class Loinc2HpoAnnotationCsvEntry {
         return loincId;
     }
 
-    public void setLoincId(String loincId) {
-        this.loincId = loincId;
-    }
-
     public String getLoincScale() {
         return loincScale;
-    }
-
-    public void setLoincScale(String loincScale) {
-        this.loincScale = loincScale;
     }
 
     public String getSystem() {
         return system;
     }
 
-    public void setSystem(String system) {
-        this.system = system;
-    }
-
-    public String getCode() {
+    public OutcomeCode getCode() {
         return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
     }
 
     public String getHpoTermId() {
         return hpoTermId;
     }
 
-    public void setHpoTermId(String hpoTermId) {
-        this.hpoTermId = hpoTermId;
-    }
-
     public String getIsNegated() {
         return isNegated;
-    }
-
-    public void setIsNegated(String isNegated) {
-        this.isNegated = isNegated;
     }
 
     public String getCreatedOn() {
         return createdOn;
     }
 
-    public void setCreatedOn(String createdOn) {
-        this.createdOn = createdOn;
-    }
-
     public String getCreatedBy() {
         return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
     }
 
     public String getLastEditedOn() {
         return lastEditedOn;
     }
 
-    public void setLastEditedOn(String lastEditedOn) {
-        this.lastEditedOn = lastEditedOn;
-    }
-
     public String getLastEditedBy() {
         return lastEditedBy;
-    }
-
-    public void setLastEditedBy(String lastEditedBy) {
-        this.lastEditedBy = lastEditedBy;
     }
 
     public String getVersion() {
@@ -191,21 +153,13 @@ public class Loinc2HpoAnnotationCsvEntry {
         return isFinalized;
     }
 
-    public void setIsFinalized(String isFinalized) {
-        this.isFinalized = isFinalized;
-    }
-
     public String getComment() {
         return comment;
     }
 
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
     @Override
     public String toString(){
-        List<String> fields = Arrays.asList(loincId, loincScale, system, code
+        List<String> fields = Arrays.asList(loincId, loincScale, system, code.toString()
                 , hpoTermId, isNegated, createdOn, createdBy, lastEditedOn,
                 lastEditedBy, version, isFinalized, comment);
         //replace any null value or empty value with "NA"
@@ -219,8 +173,8 @@ public class Loinc2HpoAnnotationCsvEntry {
     public static final class Builder {
         private String loincId;
         private String loincScale;
-        private String system;
-        private String code;
+        private String system="Loinc2Hpo";
+        private OutcomeCode code;
         private String hpoTermId;
         private String isNegated;
         private String createdOn;
@@ -253,7 +207,7 @@ public class Loinc2HpoAnnotationCsvEntry {
             return this;
         }
 
-        public Builder withCode(String code) {
+        public Builder withCode(OutcomeCode code) {
             this.code = code;
             return this;
         }

@@ -1,13 +1,13 @@
 package org.monarchinitiative.loinc2hpo.model;
 
-import org.jetbrains.annotations.NotNull;
-import org.monarchinitiative.loinc2hpo.model.codesystems.Code;
+import org.monarchinitiative.loinc2hpo.model.codesystems.OutcomeCode;
 import org.monarchinitiative.loinc2hpo.model.codesystems.InternalCode;
 import org.monarchinitiative.loinc2hpo.model.codesystems.InternalCodeSystem;
 import org.monarchinitiative.loinc2hpo.model.loinc.LoincId;
 import org.monarchinitiative.loinc2hpo.model.loinc.LoincScale;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
+import javax.validation.constraints.NotNull;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * This class is responsible for managing the annotation information for a
  * LOINC coded lab test. In essence, is uses a map to record mappings from an
  * interpretation code to a HPO term (plus a negation boolean value). The key
- * of this map,  {@link org.monarchinitiative.loinc2hpo.model.codesystems.Code}
+ * of this map,  {@link OutcomeCode}
  * must have two parts (code system and
  * actual code). We use a set of internal codes for the annotation, which is
  * a subset of FHIR codes:
@@ -72,23 +72,21 @@ public class Loinc2HpoAnnotationModel {
         String comment = dataModel.getNote();
 
         List<Loinc2HpoAnnotationCsvEntry> entries = new ArrayList<>();
-        for (Map.Entry<Code, HpoTerm4TestOutcome> annotation :
+        for (Map.Entry<OutcomeCode, HpoTerm4TestOutcome> annotation :
                 dataModel.getCandidateHpoTerms().entrySet()){
             //skip record if the mapped term is null
             if (annotation.getValue() == null ||
                     annotation.getValue().getId() == null){
                 continue;
             }
-            String system = annotation.getKey().getSystem();
-            String code_id = annotation.getKey().getCode();
+            OutcomeCode outcomeCode = annotation.getKey();
             String isNegated = annotation.getValue().isNegated()? "true" : "false";
             String hpo_term = annotation.getValue().getId().getValue();
 
            Loinc2HpoAnnotationCsvEntry entry = Loinc2HpoAnnotationCsvEntry.Builder.builder()
                     .withLoincId(loincId)
                     .withLoincScale(loincScale)
-                    .withSystem(system)
-                    .withCode(code_id)
+                    .withCode(outcomeCode)
                     .withHpoTermId(hpo_term)
                     .withIsNegated(isNegated)
                     .withCreatedOn(createdOn)
@@ -132,8 +130,7 @@ public class Loinc2HpoAnnotationModel {
         for (Loinc2HpoAnnotationCsvEntry entry : csvEntries){
             String loincId_str = entry.getLoincId();
             String loincScale_str = entry.getLoincScale();
-            String system = entry.getSystem();
-            String code = entry.getCode();
+            OutcomeCode interpretationCode = entry.getCode();
             String hpoTermId_str = entry.getHpoTermId();
             String isNegated_str = entry.getIsNegated();
             String createdOn_str = entry.getCreatedOn();
@@ -147,7 +144,6 @@ public class Loinc2HpoAnnotationModel {
             //convert strings to the correct object
             LoincId loincId = new LoincId(loincId_str);
             LoincScale loincScale = LoincScale.string2enum(loincScale_str);
-            Code interpretationCode = new Code().setSystem(system).setCode(code);
             HpoTerm4TestOutcome mappedTo = new HpoTerm4TestOutcome(TermId.of(hpoTermId_str),
                     isNegated_str.equals("true"));
             LocalDateTime createdOn = createdOn_str == null? null :
@@ -182,7 +178,7 @@ public class Loinc2HpoAnnotationModel {
 
     private final LoincId loincId;
     private final LoincScale loincScale;
-    private final HashMap<Code, HpoTerm4TestOutcome> candidateHpoTerms;
+    private final HashMap<OutcomeCode, HpoTerm4TestOutcome> candidateHpoTerms;
     private final LocalDateTime createdOn;
     private final String createdBy;
     private final LocalDateTime lastEditedOn;
@@ -193,7 +189,7 @@ public class Loinc2HpoAnnotationModel {
 
 
     public Loinc2HpoAnnotationModel(LoincId loincId, LoincScale loincScale,
-                                    Map<Code, HpoTerm4TestOutcome> annotationMap,
+                                    Map<OutcomeCode, HpoTerm4TestOutcome> annotationMap,
                                     LocalDateTime createdOn, String createdBy,
                                     LocalDateTime lastEditedOn, String lastEditedBy,
                                     String note, boolean flag, double version) {
@@ -256,7 +252,7 @@ public class Loinc2HpoAnnotationModel {
      *             an external coding system
      * @return the hpo term wrapped in the HpoTerm4TestOutcome class
      */
-    public HpoTerm4TestOutcome loincInterpretationToHPO(Code code) {
+    public HpoTerm4TestOutcome loincInterpretationToHPO(OutcomeCode code) {
         return candidateHpoTerms.get(code);
     }
 
@@ -266,7 +262,7 @@ public class Loinc2HpoAnnotationModel {
      * @TODO: consider return a copy of the map, but it will affect the parsing method.
      * @return
      */
-    public HashMap<Code, HpoTerm4TestOutcome> getCandidateHpoTerms() {
+    public HashMap<OutcomeCode, HpoTerm4TestOutcome> getCandidateHpoTerms() {
         return candidateHpoTerms;
     }
 
@@ -281,7 +277,7 @@ public class Loinc2HpoAnnotationModel {
         candidateHpoTerms.forEach((code, hpoTermId4LoincTest) -> {
             stringBuilder.append(this.loincId);
             stringBuilder.append("\t" + this.loincScale.toString());
-            stringBuilder.append("\t" + code.getSystem());
+            stringBuilder.append("\tLoinc2Hpo" );
             stringBuilder.append("\t" + code.getCode());
             stringBuilder.append("\t" + hpoTermId4LoincTest.getId().getValue());
             stringBuilder.append("\t" + hpoTermId4LoincTest.isNegated());
@@ -345,7 +341,7 @@ public class Loinc2HpoAnnotationModel {
 
         private LoincId loincId = null;
         private LoincScale loincScale = null;
-        private Map<Code, HpoTerm4TestOutcome> annotationMap = new LinkedHashMap<>();
+        private Map<OutcomeCode, HpoTerm4TestOutcome> annotationMap = new LinkedHashMap<>();
         private LocalDateTime createdOn = null;
         private String createdBy = null;
         private LocalDateTime lastEditedOn = null;
@@ -381,7 +377,7 @@ public class Loinc2HpoAnnotationModel {
          * @param low
          */
         public Builder setLowValueHpoTerm(@NotNull TermId low) {
-            Code internalLow = InternalCodeSystem.getCode(InternalCode.L);
+            OutcomeCode internalLow = InternalCodeSystem.getCode(InternalCode.L);
             return addAnnotation(internalLow, new HpoTerm4TestOutcome(low,
                     false));
         }
@@ -391,7 +387,7 @@ public class Loinc2HpoAnnotationModel {
          * @param intermediate
          */
         public Builder setNormalHpoTerm(@NotNull TermId intermediate, boolean isNegated) {
-            Code internalNormal = InternalCodeSystem.getCode(InternalCode.N);
+            OutcomeCode internalNormal = InternalCodeSystem.getCode(InternalCode.N);
             return addAnnotation(internalNormal,
                     new HpoTerm4TestOutcome(intermediate, isNegated));
         }
@@ -401,20 +397,20 @@ public class Loinc2HpoAnnotationModel {
          * @param high
          */
         public Builder setHighValueHpoTerm(@NotNull TermId high) {
-            Code internalHigh = InternalCodeSystem.getCode(InternalCode.H);
+            OutcomeCode internalHigh = InternalCodeSystem.getCode(InternalCode.H);
             return addAnnotation(internalHigh, new HpoTerm4TestOutcome(high,
                     false));
         }
 
         public Builder setPosValueHpoTerm(@NotNull TermId pos) {
-            Code internalPos = InternalCodeSystem.getCode(InternalCode.POS);
+            OutcomeCode internalPos = InternalCodeSystem.getCode(InternalCode.POS);
             return addAnnotation(internalPos, new HpoTerm4TestOutcome(pos,
                     false));
         }
 
         public Builder setNegValueHpoTerm(@NotNull TermId neg,
                                           boolean inverse) {
-            Code internalNeg = InternalCodeSystem.getCode(InternalCode.NEG);
+            OutcomeCode internalNeg = InternalCodeSystem.getCode(InternalCode.NEG);
             return addAnnotation(internalNeg, new HpoTerm4TestOutcome(neg,
                     inverse));
         }
@@ -425,7 +421,7 @@ public class Loinc2HpoAnnotationModel {
          * @param annotation
          * @return
          */
-        public Builder addAnnotation(Code code, HpoTerm4TestOutcome annotation) {
+        public Builder addAnnotation(OutcomeCode code, HpoTerm4TestOutcome annotation) {
             this.annotationMap.put(code, annotation);
             return this;
         }

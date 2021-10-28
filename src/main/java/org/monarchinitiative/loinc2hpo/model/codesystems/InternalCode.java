@@ -1,6 +1,7 @@
 package org.monarchinitiative.loinc2hpo.model.codesystems;
 
 
+import org.h2.command.ddl.CreateTable;
 import org.monarchinitiative.loinc2hpo.except.Loinc2HpoRunTimeException;
 
 public enum InternalCode {
@@ -12,41 +13,21 @@ public enum InternalCode {
     NP,
     P,
     U,
+    NOM,
     NEG,
     POS;
 
-    public static InternalCode fromCode(String codeString) throws Loinc2HpoRunTimeException  {
-        if (codeString == null || codeString.isEmpty()) {
-            return null;
-        }
-        if (codeString.equals("A")) {
-            return A;
-        }
-        if (codeString.equals("L")) {
-            return L;
-        }
-        if (codeString.equals("N")) {
-            return N;
-        }
-        if (codeString.equals("H")) {
-            return H;
-        }
-        if (codeString.equals("NP")) {
-            return NEG;
-        }
-        if (codeString.equals("P")) {
-            return POS;
-        }
-        if (codeString.equals("U")) {
-            return U;
-        }
-        if (codeString.equals("POS")) {
-            return POS;
-        }
-        if (codeString.equals("NEG")) {
-            return NEG;
-        }
-        throw new Loinc2HpoRunTimeException("Cannot recognize the code: " + codeString);
+    public static OutcomeCode fromString(String codeString) throws Loinc2HpoRunTimeException  {
+        return switch (codeString) {
+            case "A" -> ABNORMAL;
+            case "L" -> LOW;
+            case "N" -> NORMAL;
+            case "H" -> HIGH;
+            case "NP", "NEG" -> NOT_PRESENT;
+            case "NOM" -> NOMINAL;
+            case "P", "POS" -> PRESENT;
+            default -> throw new Loinc2HpoRunTimeException("Did not recognize internal code: \"" + codeString + "\"");
+        };
     }
 
     public String toCodeString(){
@@ -58,6 +39,7 @@ public enum InternalCode {
             case NP, NEG -> "NEG";
             case P, POS -> "POS";
             case U -> "U";
+            case NOM -> "NOM";
         };
     }
 
@@ -72,6 +54,15 @@ public enum InternalCode {
             case U -> "unknown code";
             case NEG -> "not present";
             case POS -> "present";
+            case NOM -> "nominal";
         };
     }
+
+    public final static OutcomeCode ABNORMAL = new OutcomeCode(InternalCode.A, "abnormal");
+    public final static OutcomeCode LOW = new OutcomeCode(InternalCode.L, "below normal range");
+    public final static OutcomeCode HIGH = new OutcomeCode(InternalCode.H, "above normal range");
+    public final static OutcomeCode NORMAL = new OutcomeCode(InternalCode.L, "normal");
+    public final static OutcomeCode NOT_PRESENT = new OutcomeCode(InternalCode.NP, "not present");
+    public final static OutcomeCode PRESENT = new OutcomeCode(InternalCode.P, "present");
+    public final static OutcomeCode NOMINAL = new OutcomeCode(InternalCode.NOM, "nominal");
 }

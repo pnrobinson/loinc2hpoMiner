@@ -59,7 +59,7 @@ public class LoincEntry {
     }
 
 
-    public LoincId getLOINC_Number(){ return LOINC_Number;}
+    public LoincId getLoincId(){ return LOINC_Number;}
     public String getComponent() { return component; }
     public String getProperty() { return property; }
     public String getTimeAspect() { return timeAspect; }
@@ -94,7 +94,7 @@ public class LoincEntry {
             while ((line=br.readLine())!=null) {
                 try {
                     LoincEntry entry = new LoincEntry(line);
-                    builder.put(entry.getLOINC_Number(),entry);
+                    builder.put(entry.getLoincId(),entry);
                     count_correct++;
                 } catch (Loinc2HpoRunTimeException e) {
                     logger.error("Malformed loinc code in the line:\n " + line);
@@ -114,9 +114,8 @@ public class LoincEntry {
 
     @Override
     public boolean equals(Object obj){
-        if (this.LOINC_Number != null && obj instanceof LoincEntry) {
-            LoincEntry other = (LoincEntry) obj;
-            return this.LOINC_Number.equals(other.getLOINC_Number());
+        if (this.LOINC_Number != null && obj instanceof LoincEntry other) {
+            return this.LOINC_Number.equals(other.getLoincId());
         }
         return false;
     }

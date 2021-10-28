@@ -18,10 +18,12 @@ import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import org.monarchinitiative.loinc2hpo.except.Loinc2HpoRunTimeException;
 import org.monarchinitiative.loinc2hpo.guitools.*;
 import org.monarchinitiative.loinc2hpo.io.HpoMenuDownloader;
 import org.monarchinitiative.loinc2hpo.io.loincparser.*;
 import org.monarchinitiative.loinc2hpo.model.*;
+import org.monarchinitiative.loinc2hpo.model.codesystems.OutcomeCode;
 import org.monarchinitiative.loinc2hpo.model.codesystems.InternalCodeSystem;
 import org.monarchinitiative.loinc2hpo.model.loinc.LoincEntry;
 import org.monarchinitiative.loinc2hpo.model.loinc.LoincId;
@@ -58,6 +60,7 @@ public class Loinc2HpoMainController {
 
     private final Properties pgProperties;
 
+
     private Map<LoincId, LoincEntry> loincmap = null;
 
     private final ObservableMap<LoincId, LoincEntry> loincMap = FXCollections.observableHashMap();
@@ -66,7 +69,8 @@ public class Loinc2HpoMainController {
 
     private final CurrentAnnotationModel currentAnnotationModel;
 
-    //private final Stage primarystage;
+    @FXML
+    public Button nominalAnnotationButton;
     @FXML
     private Button initLOINCtableButton;
     @FXML
@@ -111,9 +115,6 @@ public class Loinc2HpoMainController {
     private TableColumn<LoincEntry, String> nameTableColumn;
 
     private Loinc2HpoAnnotationModel toCopy;
-
-
-    private final ObservableList<AdvancedAnnotationTableComponent> tempAdvancedAnnotations = FXCollections.observableArrayList();
 
     @FXML
     private TextArea annotationNoteField;
@@ -220,8 +221,6 @@ public class Loinc2HpoMainController {
         optionalResources.addSettings(settings);
         // run the initialization task on a separate thread
         StartupTask task = new StartupTask(optionalResources, pgProperties);
-        //this.hpoReadyLabel.textProperty().bind(task.messageProperty());
-        //task.setOnSucceeded(e -> this.hpoReadyLabel.textProperty().unbind());
         this.executor.submit(task);
         userSuppliedLoincCodes.setTooltip(new Tooltip("Filter Loinc by providing a Loinc list in txt file"));
         clearButton.setTooltip(new Tooltip("Clear all textfields"));
@@ -250,91 +249,6 @@ public class Loinc2HpoMainController {
                 };
             }
         });
-    /*
-
-        //if user creates a new Loinc group, add two menuitems for it, and specify the actions when those menuitems are clicked
-        userCreatedLoincLists.addListener((ListChangeListener<String>) c -> {
-            while (c.next()) {
-                if (c.wasAdded()) {
-                    LOGGER.trace(c + " was added");
-                    c.getAddedSubList()
-                            .stream()
-                            .forEach(p -> {
-                                //putIfAbsent is important to prevent overwritten
-                                //appTempData.addUserCreatedLoincList(p, new LinkedHashSet<>());
-                                MenuItem newListMenuItem = new MenuItem(p);
-                                groupUngroup2LoincListButton.getItems().add(newListMenuItem);
-                                newListMenuItem.setOnAction((event -> {
-                                    LOGGER.trace("action detected");
-                                    if (loincTableView.getSelectionModel().getSelectedItem() != null) {
-                                        LoincId loincId = loincTableView.getSelectionModel()
-                                                .getSelectedItem().getLOINC_Number();
-
-
-                                        changeColorLoincTableView();
-
-                                    }
-                                }));
-
-                                MenuItem newExportMenuItem = new MenuItem(p);
-                                exportLoincListButton.getItems().add(newExportMenuItem);
-                                newExportMenuItem.setOnAction((event -> {
-                                    LOGGER.trace("action detected");
-                                    if (loincTableView.getSelectionModel().getSelectedItem() != null) {
-                                        Set<LoincId> loincIds = Set.of(); //appResources.getUserCreatedLoincLists().get(p);
-                                        if (loincIds.isEmpty()) {
-                                            return;
-                                        }
-                                        FileChooser chooser = new FileChooser();
-                                        chooser.setTitle("Save Loinc List: ");
-                                        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("TSV files (*.txt)", "*.txt"));
-                                        chooser.setInitialFileName(p);
-                                        File f = chooser.showSaveDialog(null);
-                                        String filepath;
-                                        if (f == null) {
-                                            return;
-                                        } else {
-                                            filepath = f.getAbsolutePath();
-                                        }
-
-                                        StringBuilder builder = new StringBuilder();
-                                        loincIds.forEach(l -> {
-                                            builder.append(l);
-                                            builder.append("\n");
-                                        });
-
-                                        //WriteToFile.writeToFile(builder.toString().trim(), filepath);
-                                    }
-                                }));
-
-                                MenuItem newImportMenuItem = new MenuItem(p);
-                                importLoincGroupButton.getItems().add(newImportMenuItem);
-                                newImportMenuItem.setOnAction((event) -> {
-                                    LOGGER.trace("user wants to import " + p);
-                                    FileChooser chooser = new FileChooser();
-                                    chooser.setTitle("Select file to import from");
-                                    File f = chooser.showOpenDialog(null);
-                                    if (f == null) {
-                                        return;
-                                    }
-                                    List<String> malformed = new ArrayList<>();
-                                    List<String> notFound = new ArrayList<>();
-                                    if (!malformed.isEmpty() || !notFound.isEmpty()) {
-                                        String malformedString = String.join("\n", malformed);
-                                        String notFoundString = String.join("\n", notFound);
-                                        PopUps.showInfoMessage(String.format("Malformed Loinc: %d\n%s\nNot Found: %d\n%s", malformed.size(), malformedString, notFound.size(), notFoundString), "Error during importing");
-                                    }
-
-                                });
-                            });
-                } else {
-                    LOGGER.error("This should never happen");
-                }
-            }
-        });
-
-     */
-
         //track what is selected in the loincTable. If currently selected LOINC is a Ord type with a Presence/Absence outcome, change the listener isPresentOrd to true; otherwise false.
         loincTableView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -349,9 +263,9 @@ public class Loinc2HpoMainController {
 
     private void initializeHpoAnnotationTable() {
         this.hpoAnnotationTable.setEditable(false);
-        hpoAnnotationTid.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getTid().getValue()));
+        hpoAnnotationTid.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getHpoTermId().getValue()));
         hpoAnnotationType.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getLoincType()));
-        hpoAnnotationTermLabel.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getLabel()));
+        hpoAnnotationTermLabel.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getHpoTermLabel()));
         hpoAnnotationTid.setSortable(false);
         hpoAnnotationType.setSortable(false);
         hpoAnnotationTermLabel.setSortable(false);
@@ -384,8 +298,6 @@ public class Loinc2HpoMainController {
             }
         });
         notAbnormalHpoColumn.setSortable(true);
-        //notAbnormalHpoColumn.setCellValueFactory(cdf -> cdf.getValue().whenValueNormalOrNegative() == null ? new ReadOnlyStringWrapper("\" \"")
-        //        : new ReadOnlyStringWrapper(cdf.getValue().whenValueNormalOrNegative().getName()));
         notAbnormalHpoColumn.setCellValueFactory(cdf -> {
             TermId termId = cdf.getValue().whenValueNormalOrNegative();
             if (termId == null) { //no annotation
@@ -397,8 +309,6 @@ public class Loinc2HpoMainController {
             }
         });
         aboveNormalHpoColumn.setSortable(true);
-//        aboveNormalHpoColumn.setCellValueFactory(cdf -> cdf.getValue().whenValueHighOrPositive() == null ? new ReadOnlyStringWrapper("\" \"")
-//        : new ReadOnlyStringWrapper(cdf.getValue().whenValueHighOrPositive().getName()));
         aboveNormalHpoColumn.setCellValueFactory(cdf -> {
             TermId termId = cdf.getValue().whenValueHighOrPositive();
             if (termId == null) { //no annotation
@@ -421,7 +331,7 @@ public class Loinc2HpoMainController {
     private void initTableStructure() {
         loincIdTableColumn.setSortable(true);
         loincIdTableColumn.setCellValueFactory(cdf ->
-                new ReadOnlyStringWrapper(cdf.getValue().getLOINC_Number().toString())
+                new ReadOnlyStringWrapper(cdf.getValue().getLoincId().toString())
         );
         componentTableColumn.setSortable(true);
         componentTableColumn.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getComponent()));
@@ -639,7 +549,7 @@ public class Loinc2HpoMainController {
             LoincId loincId = new LoincId(query);
             if (this.loincmap.containsKey(loincId)) {
                 entrylist.add(this.loincmap.get(loincId));
-                LOGGER.debug(this.loincmap.get(loincId).getLOINC_Number() + " : " + this.loincmap.get(loincId).getLongName());
+                LOGGER.debug(this.loincmap.get(loincId).getLoincId() + " : " + this.loincmap.get(loincId).getLongName());
             } else { //correct loinc code form but not valid
                 throw new Exception();
             }
@@ -888,7 +798,7 @@ public class Loinc2HpoMainController {
             return;
         }
         LoincEntry loincEntryForAnnotation = loincTableView.getSelectionModel().getSelectedItem();
-        LoincId loincCode = loincEntryForAnnotation.getLOINC_Number();
+        LoincId loincCode = loincEntryForAnnotation.getLoincId();
         LoincScale loincScale = LoincScale.string2enum(loincEntryForAnnotation.getScale());
         if (! loincScale.equals(LoincScale.Nom)) {
             String errorMsg = String.format("You are trying to annotate with NOM but the mode of %s is %s",
@@ -933,7 +843,7 @@ public class Loinc2HpoMainController {
             return;
         }
         LoincEntry loincEntryForAnnotation = loincTableView.getSelectionModel().getSelectedItem();
-        LoincId loincCode = loincEntryForAnnotation.getLOINC_Number();
+        LoincId loincCode = loincEntryForAnnotation.getLoincId();
         LoincScale loincScale = LoincScale.string2enum(loincEntryForAnnotation.getScale());
         if (! loincScale.equals(LoincScale.Ord)) {
             String errorMsg = String.format("You are trying to annotate with ORD but the mode of %s is %s",
@@ -990,7 +900,7 @@ public class Loinc2HpoMainController {
             return;
         }
         LoincEntry loincEntryForAnnotation = loincTableView.getSelectionModel().getSelectedItem();
-        LoincId loincCode = loincEntryForAnnotation.getLOINC_Number();
+        LoincId loincCode = loincEntryForAnnotation.getLoincId();
         LoincScale loincScale = LoincScale.string2enum(loincEntryForAnnotation.getScale());
         if (! loincScale.equals(LoincScale.Qn)) {
             String errorMsg = String.format("You are trying to annotate with Qn but the mode of %s is %s",
@@ -1379,4 +1289,52 @@ public class Loinc2HpoMainController {
         }
     }
 
+    public void editExistingLoincAnnotation(ActionEvent actionEvent) {
+        LoincEntry selectedEntry = this.loincTableView.getSelectionModel().getSelectedItem();
+        LoincId loincId = selectedEntry.getLoincId();
+        if (! this.annotationsMap.containsKey(loincId)) {
+            String msg = String.format("The LOINC entry %s has not been annotated yet. " +
+                    "Create a new annotation by right clicking on HPO terms", loincId.toString());
+            PopUps.showInfoMessage(msg, "Warning");
+            return;
+        }
+        // if we get here, we have an existing annotation that the user wants to edit
+        Loinc2HpoAnnotationModel annot = this.annotationsMap.get(loincId);
+        HashMap<OutcomeCode, HpoTerm4TestOutcome> map = annot.getCandidateHpoTerms();
+        // clear annotation table if required
+        hpoAnnotationTable.getItems().clear();
+        List<HpoAnnotationRow> rows = new ArrayList<>();
+        for (var entry : map.entrySet()) {
+            OutcomeCode code = entry.getKey();
+            HpoTerm4TestOutcome outcome = entry.getValue();
+            TermId hpoTermId = outcome.getId();
+            Optional<String> opt = optionalResources.getOntology().getTermLabel(hpoTermId);
+            String label = opt.isPresent() ? opt.get() : "n/a";
+            HpoAnnotationRow row;
+            switch (code.getCode()) {
+                case H:
+                    row = HpoAnnotationRow.qnHigh(hpoTermId,label);
+                    break;
+                case L:
+                    row = HpoAnnotationRow.qnLow(hpoTermId,label);
+                    break;
+                case N:
+                    row = HpoAnnotationRow.normal(hpoTermId, label);
+                    break;
+                case A:
+                    row = HpoAnnotationRow.ordAbnormal(hpoTermId, label);
+                case NOM:
+                    row = HpoAnnotationRow.nominal(hpoTermId, label);
+                default:
+                    // should never ever happen
+                    throw new Loinc2HpoRunTimeException("Did not recognize label: " + code.getCode());
+            }
+            rows.add(row);
+        }
+        ObservableList<HpoAnnotationRow> result = FXCollections.observableArrayList(rows);
+        runLater(() -> {
+            hpoAnnotationTable.getItems().clear();
+            hpoAnnotationTable.setItems(result);
+        });
+    }
 }

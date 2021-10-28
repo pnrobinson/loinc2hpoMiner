@@ -4,14 +4,14 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 public class HpoAnnotationRow {
     private final String loincType;
-    private final TermId tid;
-    private final String label;
+    private final TermId hpoTermId;
+    private final String hpoTermLabel;
 
 
-    public HpoAnnotationRow(String loincType, TermId tid, String label) {
+    public HpoAnnotationRow(String loincType, TermId tid, String termLabel) {
         this.loincType = loincType;
-        this.tid = tid;
-        this.label = label;
+        this.hpoTermId = tid;
+        this.hpoTermLabel = termLabel;
     }
 
     public static HpoAnnotationRow qnLow(TermId tid, String name) {
@@ -38,17 +38,17 @@ public class HpoAnnotationRow {
         return loincType;
     }
 
-    public TermId getTid() {
-        return tid;
+    public TermId getHpoTermId() {
+        return hpoTermId;
     }
 
-    public String getLabel() {
-        return label;
+    public String getHpoTermLabel() {
+        return hpoTermLabel;
     }
 
 
     @Override
     public String toString() {
-        return loincType + " - " + tid.getValue() + " - " + label;
+        return loincType + " - " + hpoTermId.getValue() + " - " + hpoTermLabel;
     }
 }

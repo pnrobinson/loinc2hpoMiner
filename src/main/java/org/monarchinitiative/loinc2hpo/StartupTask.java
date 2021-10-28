@@ -78,7 +78,7 @@ public final class StartupTask extends Task<Void> {
             while ((line=br.readLine())!=null) {
                 try {
                     LoincEntry entry = new LoincEntry(line);
-                    loincMap.put(entry.getLOINC_Number(),entry);
+                    loincMap.put(entry.getLoincId(),entry);
                     count_correct++;
                 } catch (Loinc2HpoRunTimeException e) {
                     LOGGER.error("Malformed loinc code in the line:\n " + line);
@@ -99,7 +99,6 @@ public final class StartupTask extends Task<Void> {
 
     /**
      * Load the HPO using phenol and set the corresponding fields in OptionalResources
-     * @param ontologyPath path to hp.json file
      */
     private void ingestOntology() {
         String ontologyPath = optionalResources.getHpoJsonPath();

@@ -21,7 +21,6 @@ public class Loinc2HpoConfig {
 
     public static final String CONFIG_FILE_BASENAME = "loinc2hpo.properties";
 
-
     @Bean
     public OptionalResources optionalResources() {
         return new OptionalResources();
@@ -90,22 +89,4 @@ public class Loinc2HpoConfig {
         return appHomeDir;
     }
 
-
-//    @Bean("appNameVersion")
-//    String appNameVersion(String appVersion, String appName) {
-//        return String.format("%s : %s", appName, appVersion);
-//    }
-//
-//
-//    @Bean("appVersion")
-//    String appVersion() {
-//        // this property is set in FenominalApplication#init()
-//        return System.getProperty(FenominalApplication.FENOMINAL_VERSION_PROP_KEY);
-//    }
-//
-//    @Bean("appName")
-//    String appName() {
-//        // this property is set in FenominalApplication#init()
-//        return System.getProperty(FenominalApplication.FENOMINAL_NAME_KEY);
-//    }
 }
