@@ -4,8 +4,7 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.io.Serializable;
 
-public class HpoTerm4TestOutcome implements Serializable {
-    private static final long serialVersionUID = 1L;
+public class HpoTerm4TestOutcome {
 
     private boolean isNegated=false;
     private final TermId tid;

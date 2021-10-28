@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 
 public class Loinc2HpoAnnotationCsvEntry {
 
-    private String loincId;
-    private String loincScale;
-    private String system;
+    private final String loincId;
+    private final String loincScale;
+    private final String system;
     private final OutcomeCode code;
     private final String hpoTermId;
     private final String isNegated;
@@ -25,7 +25,7 @@ public class Loinc2HpoAnnotationCsvEntry {
     private final String createdBy;
     private final String lastEditedOn;
     private final String lastEditedBy;
-    private String version;
+    private final String version;
     private final String isFinalized;
     private final String comment;
 
@@ -143,10 +143,6 @@ public class Loinc2HpoAnnotationCsvEntry {
 
     public String getVersion() {
         return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
     }
 
     public String getIsFinalized() {

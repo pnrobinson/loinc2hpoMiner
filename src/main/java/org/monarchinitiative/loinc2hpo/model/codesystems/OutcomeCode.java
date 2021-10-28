@@ -1,7 +1,6 @@
 package org.monarchinitiative.loinc2hpo.model.codesystems;
 
 
-import java.io.Serializable;
 import java.util.Objects;
 
 /**

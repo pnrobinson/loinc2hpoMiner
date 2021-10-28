@@ -63,9 +63,7 @@ public class Loinc2HpoMainController {
 
     private Map<LoincId, LoincEntry> loincmap = null;
 
-    private final ObservableMap<LoincId, LoincEntry> loincMap = FXCollections.observableHashMap();
-
-    private ObservableMap<LoincId, Loinc2HpoAnnotationModel> annotationsMap = FXCollections.observableHashMap();
+    private final ObservableMap<LoincId, Loinc2HpoAnnotationModel> annotationsMap = FXCollections.observableHashMap();
 
     private final CurrentAnnotationModel currentAnnotationModel;
 
@@ -1323,8 +1321,10 @@ public class Loinc2HpoMainController {
                     break;
                 case A:
                     row = HpoAnnotationRow.ordAbnormal(hpoTermId, label);
+                    break;
                 case NOM:
                     row = HpoAnnotationRow.nominal(hpoTermId, label);
+                    break;
                 default:
                     // should never ever happen
                     throw new Loinc2HpoRunTimeException("Did not recognize label: " + code.getCode());

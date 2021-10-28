@@ -3,7 +3,6 @@ package org.monarchinitiative.loinc2hpo.guitools;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.layout.*;
-import javafx.scene.shape.Box;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.scene.Scene;

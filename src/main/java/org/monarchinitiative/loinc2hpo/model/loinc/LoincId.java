@@ -1,14 +1,13 @@
 package org.monarchinitiative.loinc2hpo.model.loinc;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
 import org.monarchinitiative.loinc2hpo.except.Loinc2HpoRunTimeException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 
-public class LoincId  implements Serializable {
-    private static final long serialVersionUID = 1L;
-    private static final Logger logger = LogManager.getLogger();
+public class LoincId {
+    private static final Logger logger = LoggerFactory.getLogger(LoincId.class);
     /** The part of the Loinc code prior to the dash */
     private final int num;
     /** The part of the Loinc code following the dash */

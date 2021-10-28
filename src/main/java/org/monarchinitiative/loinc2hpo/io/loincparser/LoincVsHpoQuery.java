@@ -84,10 +84,9 @@ public class LoincVsHpoQuery {
 
 
     private Set<String> getWords(Term term) {
-        Set<String> words = new HashSet<>();
         String label = term.getName();
         String [] labelWords = label.split("\s+");
-        words.addAll(List.of(labelWords));
+        Set<String> words = new HashSet<>(List.of(labelWords));
         for (var synonym: term.getSynonyms()) {
             String synonymLabel = synonym.getValue();
             //System.out.println(synonymLabel);

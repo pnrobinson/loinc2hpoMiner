@@ -58,7 +58,7 @@ public class Settings {
 
     public static Settings loadSettings(Settings settings, String settingsPath) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(settingsPath));
-        String line = null;
+        String line;
         while ((line = br.readLine()) != null) {
             int idx=line.indexOf(":");
             if (idx<0) {
@@ -227,13 +227,12 @@ public class Settings {
     }
 
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("hp.json: " + hpoJsonPath);
-        builder.append("\n");
-        builder.append("loincCoreTable: " + loincCoreTablePath);
-        builder.append("\n");
-        builder.append("annotationFile: " + annotationFile);
-        return builder.toString();
+        String builder = "hp.json: " + hpoJsonPath +
+                "\n" +
+                "loincCoreTable: " + loincCoreTablePath +
+                "\n" +
+                "annotationFile: " + annotationFile;
+        return builder;
     }
 
 

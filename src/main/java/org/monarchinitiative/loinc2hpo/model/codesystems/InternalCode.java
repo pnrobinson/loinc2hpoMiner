@@ -1,7 +1,6 @@
 package org.monarchinitiative.loinc2hpo.model.codesystems;
 
 
-import org.h2.command.ddl.CreateTable;
 import org.monarchinitiative.loinc2hpo.except.Loinc2HpoRunTimeException;
 
 public enum InternalCode {
@@ -49,10 +48,9 @@ public enum InternalCode {
             case L -> "below normal range";
             case N -> "within normal range";
             case H -> "above normal range";
-            case NP -> "not present";
+            case NP, NEG -> "not present";
             case P -> "present";
             case U -> "unknown code";
-            case NEG -> "not present";
             case POS -> "present";
             case NOM -> "nominal";
         };

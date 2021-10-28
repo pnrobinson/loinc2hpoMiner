@@ -81,7 +81,7 @@ public class LoincImporter {
         logger.trace(String.format("Searching for loinc data about code \"%s\"",code));
         try {
             BufferedReader br = new BufferedReader(new FileReader(path));
-            String line = null;
+            String line;
             while ((line = br.readLine()) != null) {
                 if (line.contains(code)) {
                     List<String> splitted = splitCSVquoted(line);
