@@ -5,14 +5,18 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import org.monarchinitiative.loinc2hpo.except.Loinc2HpoRunTimeException;
 import org.monarchinitiative.loinc2hpo.io.loincparser.LoincVsHpoQuery;
-import org.monarchinitiative.loinc2hpo.model.Loinc2HpoAnnotationModel;
 import org.monarchinitiative.loinc2hpo.model.Settings;
-import org.monarchinitiative.loinc2hpo.model.loinc.LoincEntry;
-import org.monarchinitiative.loinc2hpo.model.loinc.LoincId;
+import org.monarchinitiative.loinc2hpocore.annotationmodel.LoincAnnotation;
+import org.monarchinitiative.loinc2hpocore.io.Loinc2HpoAnnotationParser;
+import org.monarchinitiative.loinc2hpocore.loinc.LoincEntry;
+import org.monarchinitiative.loinc2hpocore.loinc.LoincId;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
+import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 import java.util.Map;
 
@@ -122,14 +126,20 @@ public class OptionalResources {
         setHpoJsonPath(settings.getHpoJsonPath());
     }
 
-    private Map<LoincId, Loinc2HpoAnnotationModel> loincAnnotationMap = null;
+    private Map<TermId, LoincAnnotation> loincAnnotationMap = null;
 
-    public Map<LoincId, Loinc2HpoAnnotationModel> getLoincAnnotationMap (){
+    public Map<TermId, LoincAnnotation> getLoincAnnotationMap ()   {
         if (loincAnnotationMap == null) {
             if (annotationFileProperty() == null) {
                 return Map.of();
             }
-            this.loincAnnotationMap = Loinc2HpoAnnotationModel.from_csv(annotationFileProperty().get());
+            try {
+                String path = annotationFileProperty().get();
+                Loinc2HpoAnnotationParser parser = new Loinc2HpoAnnotationParser(path);
+                this.loincAnnotationMap = parser.loincToHpoAnnotationMap();
+            }catch (Loinc2HpoRunTimeException  e) {
+                e.printStackTrace();
+            }
         }
         return this.loincAnnotationMap;
     }

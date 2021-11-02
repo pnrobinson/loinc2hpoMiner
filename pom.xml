@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.monarchinitiative.loinc2hpo-mine</groupId>
     <artifactId>loinc2hpo-miner</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -26,7 +26,7 @@
         <log4j.version>2.9.1</log4j.version>
         <slf4j.version>1.7.25</slf4j.version>
         <mockito.version>3.3.3</mockito.version>
-        <junit.version>5.6.2</junit.version>
+        <jupiter.version>5.8.1</jupiter.version>
         <jena.version>3.14.0</jena.version>
     </properties>
 
@@ -59,9 +59,21 @@
         </dependency>
 
         <dependency>
+            <groupId>org.monarchinitiative</groupId>
+            <artifactId>loinc2hpo-core</artifactId>
+            <version>1.4.0</version>
+        </dependency>
+
+        <dependency>
             <groupId>net.rgielen</groupId>
             <artifactId>javafx-weaver-spring-boot-starter</artifactId>
             <version>1.3.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.junit.vintage</groupId>
+                    <artifactId>junit-vintage-engine</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>

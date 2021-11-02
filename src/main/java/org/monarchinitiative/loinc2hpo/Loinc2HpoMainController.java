@@ -23,11 +23,12 @@ import org.monarchinitiative.loinc2hpo.guitools.*;
 import org.monarchinitiative.loinc2hpo.io.HpoMenuDownloader;
 import org.monarchinitiative.loinc2hpo.io.loincparser.*;
 import org.monarchinitiative.loinc2hpo.model.*;
-import org.monarchinitiative.loinc2hpo.model.codesystems.OutcomeCode;
-import org.monarchinitiative.loinc2hpo.model.codesystems.InternalCodeSystem;
-import org.monarchinitiative.loinc2hpo.model.loinc.LoincEntry;
-import org.monarchinitiative.loinc2hpo.model.loinc.LoincId;
-import org.monarchinitiative.loinc2hpo.model.loinc.LoincScale;
+import org.monarchinitiative.loinc2hpocore.annotationmodel.LoincAnnotation;
+import org.monarchinitiative.loinc2hpocore.annotationmodel.NominalLoincAnnotation;
+import org.monarchinitiative.loinc2hpocore.annotationmodel.OrdinalHpoAnnotation;
+import org.monarchinitiative.loinc2hpocore.annotationmodel.QuantitativeLoincAnnotation;
+import org.monarchinitiative.loinc2hpocore.loinc.LoincEntry;
+import org.monarchinitiative.loinc2hpocore.loinc.LoincId;
 import org.monarchinitiative.phenol.ontology.algo.OntologyAlgorithm;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.Term;
@@ -38,6 +39,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.stereotype.Component;
+
+import org.monarchinitiative.loinc2hpocore.loinc.LoincScale;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,7 +66,7 @@ public class Loinc2HpoMainController {
 
     private Map<LoincId, LoincEntry> loincmap = null;
 
-    private final ObservableMap<LoincId, Loinc2HpoAnnotationModel> annotationsMap = FXCollections.observableHashMap();
+    private final ObservableMap<LoincId, LoincAnnotation> annotationsMap = FXCollections.observableHashMap();
 
     private final CurrentAnnotationModel currentAnnotationModel;
 
@@ -112,7 +115,7 @@ public class Loinc2HpoMainController {
     @FXML
     private TableColumn<LoincEntry, String> nameTableColumn;
 
-    private Loinc2HpoAnnotationModel toCopy;
+//    private LoincAnnotation toCopy;
 
     @FXML
     private TextArea annotationNoteField;
@@ -160,20 +163,20 @@ public class Loinc2HpoMainController {
 
 
     @FXML
-    private TableView<Loinc2HpoAnnotationModel> loincAnnotationTableView;
+    private TableView<LoincAnnotation> loincAnnotationTableView;
     @FXML
-    private TableColumn<Loinc2HpoAnnotationModel, String> loincNumberColumn;
+    private TableColumn<LoincAnnotation, String> loincNumberColumn;
     @FXML
-    private TableColumn<Loinc2HpoAnnotationModel, String> belowNormalHpoColumn;
+    private TableColumn<LoincAnnotation, String> belowNormalHpoColumn;
     @FXML
-    private TableColumn<Loinc2HpoAnnotationModel, String> notAbnormalHpoColumn;
+    private TableColumn<LoincAnnotation, String> notAbnormalHpoColumn;
     @FXML
-    private TableColumn<Loinc2HpoAnnotationModel, String> aboveNormalHpoColumn;
+    private TableColumn<LoincAnnotation, String> aboveNormalHpoColumn;
     @FXML
-    private TableColumn<Loinc2HpoAnnotationModel, String> loincScaleColumn;
+    private TableColumn<LoincAnnotation, String> loincScaleColumn;
 
     @FXML
-    private TableColumn<Loinc2HpoAnnotationModel, String> noteColumn;
+    private TableColumn<LoincAnnotation, String> noteColumn;
     final ObservableList<String> userCreatedLoincLists = FXCollections
             .observableArrayList();
     final private String LOINCWAITING4NEWHPO = "require_new_HPO_terms";
@@ -402,7 +405,7 @@ public class Loinc2HpoMainController {
         System.err.println("Got name: " + name);
         hpoListView.getItems().clear();
         LoincVsHpoQuery loincVsHpoQuery = optionalResources.getLoincVsHpoQuery();
-        List<HpoClassFound> foundHpoList = loincVsHpoQuery.queryByString(name, entry.getLongNameComponents());
+        List<HpoClassFound> foundHpoList = loincVsHpoQuery.queryByString(name, entry.getLoincLongName());
         updateHpoTermListView(foundHpoList);
     }
 
@@ -429,7 +432,7 @@ public class Loinc2HpoMainController {
         System.err.println("Got name: " + name);
         hpoListView.getItems().clear();
         LoincVsHpoQuery loincVsHpoQuery = optionalResources.getLoincVsHpoQuery();
-        List<HpoClassFound> foundHpoList = loincVsHpoQuery.queryByLoincId(name, entry.getLongNameComponents());
+        List<HpoClassFound> foundHpoList = loincVsHpoQuery.queryByLoincId(name, entry.getLoincLongName());
         updateHpoTermListView(foundHpoList);
     }
 
@@ -797,7 +800,7 @@ public class Loinc2HpoMainController {
         }
         LoincEntry loincEntryForAnnotation = loincTableView.getSelectionModel().getSelectedItem();
         LoincId loincCode = loincEntryForAnnotation.getLoincId();
-        LoincScale loincScale = LoincScale.string2enum(loincEntryForAnnotation.getScale());
+        LoincScale loincScale = loincEntryForAnnotation.getScale();
         if (! loincScale.equals(LoincScale.Nom)) {
             String errorMsg = String.format("You are trying to annotate with NOM but the mode of %s is %s",
                     loincCode, loincScale.name());
@@ -818,6 +821,7 @@ public class Loinc2HpoMainController {
         String comment = annotationNoteField.getText().trim();
         Term nominal = currentAnnotationModel.getNominal();
         Term normal = currentAnnotationModel.getNormal();
+        QuantitativeLoincAnnotation qannot = new NominalLoincAnnotation(normal);
         Loinc2HpoAnnotationModel.Builder builder = new Loinc2HpoAnnotationModel.Builder();
         builder.setLoincId(loincCode)
                 .setLoincScale(loincScale)
@@ -842,7 +846,7 @@ public class Loinc2HpoMainController {
         }
         LoincEntry loincEntryForAnnotation = loincTableView.getSelectionModel().getSelectedItem();
         LoincId loincCode = loincEntryForAnnotation.getLoincId();
-        LoincScale loincScale = LoincScale.string2enum(loincEntryForAnnotation.getScale());
+        LoincScale loincScale = loincEntryForAnnotation.getScale();
         if (! loincScale.equals(LoincScale.Ord)) {
             String errorMsg = String.format("You are trying to annotate with ORD but the mode of %s is %s",
                     loincCode, loincScale.name());
@@ -877,6 +881,7 @@ public class Loinc2HpoMainController {
                     errorMsg);
             return;
         }
+        OrdinalHpoAnnotation ordannot = new OrdinalHpoAnnotation(normal, abn);
         Loinc2HpoAnnotationModel.Builder builder = new Loinc2HpoAnnotationModel.Builder();
         builder.setLoincId(loincCode)
                 .setLoincScale(loincScale)
@@ -898,7 +903,7 @@ public class Loinc2HpoMainController {
             return;
         }
         LoincEntry loincEntryForAnnotation = loincTableView.getSelectionModel().getSelectedItem();
-        LoincId loincCode = loincEntryForAnnotation.getLoincId();
+        LoincId loincCode = loincEntryForAnnotation.getLOINC_Number();
         LoincScale loincScale = LoincScale.string2enum(loincEntryForAnnotation.getScale());
         if (! loincScale.equals(LoincScale.Qn)) {
             String errorMsg = String.format("You are trying to annotate with Qn but the mode of %s is %s",
@@ -946,7 +951,7 @@ public class Loinc2HpoMainController {
         builder.setLowValueHpoTerm(low.getId())
                 .setNormalHpoTerm(normal.getId(), true)
                 .setHighValueHpoTerm(high.getId());
-        builder.addAnnotation(InternalCodeSystem.abnormal(), new HpoTerm4TestOutcome(normal.getId()));
+        builder.addAnnotation(InternalCodeSystemLEGACY.abnormal(), new HpoTerm4TestOutcome(normal.getId()));
         builder.setCreatedBy(settings.getBiocuratorID() == null ? MISSINGVALUE : settings.getBiocuratorID())
                 .setCreatedOn(LocalDateTime.now().withNano(0))
                 .setVersion(0.1);
@@ -1288,7 +1293,7 @@ public class Loinc2HpoMainController {
     }
 
     public void editExistingLoincAnnotation(ActionEvent actionEvent) {
-        LoincEntry selectedEntry = this.loincTableView.getSelectionModel().getSelectedItem();
+        LoincEntryLEGACY selectedEntry = this.loincTableView.getSelectionModel().getSelectedItem();
         LoincId loincId = selectedEntry.getLoincId();
         if (! this.annotationsMap.containsKey(loincId)) {
             String msg = String.format("The LOINC entry %s has not been annotated yet. " +
@@ -1298,12 +1303,12 @@ public class Loinc2HpoMainController {
         }
         // if we get here, we have an existing annotation that the user wants to edit
         Loinc2HpoAnnotationModel annot = this.annotationsMap.get(loincId);
-        HashMap<OutcomeCode, HpoTerm4TestOutcome> map = annot.getCandidateHpoTerms();
+        HashMap<OutcomeCodeLEGACY, HpoTerm4TestOutcome> map = annot.getCandidateHpoTerms();
         // clear annotation table if required
         hpoAnnotationTable.getItems().clear();
         List<HpoAnnotationRow> rows = new ArrayList<>();
         for (var entry : map.entrySet()) {
-            OutcomeCode code = entry.getKey();
+            OutcomeCodeLEGACY code = entry.getKey();
             HpoTerm4TestOutcome outcome = entry.getValue();
             TermId hpoTermId = outcome.getId();
             Optional<String> opt = optionalResources.getOntology().getTermLabel(hpoTermId);

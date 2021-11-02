@@ -3,8 +3,8 @@ package org.monarchinitiative.loinc2hpo;
 import javafx.concurrent.Task;
 import org.monarchinitiative.loinc2hpo.except.Loinc2HpoRunTimeException;
 import org.monarchinitiative.loinc2hpo.io.JsonHpoParser;
-import org.monarchinitiative.loinc2hpo.model.loinc.LoincEntry;
-import org.monarchinitiative.loinc2hpo.model.loinc.LoincId;
+import org.monarchinitiative.loinc2hpocore.loinc.LoincEntry;
+import org.monarchinitiative.loinc2hpocore.loinc.LoincId;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +77,7 @@ public final class StartupTask extends Task<Void> {
             }
             while ((line=br.readLine())!=null) {
                 try {
-                    LoincEntry entry = new LoincEntry(line);
+                    LoincEntry entry = LoincEntry.fromQuotedCsvLine(line);
                     loincMap.put(entry.getLoincId(),entry);
                     count_correct++;
                 } catch (Loinc2HpoRunTimeException e) {

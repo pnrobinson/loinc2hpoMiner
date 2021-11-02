@@ -2,7 +2,7 @@ package org.monarchinitiative.loinc2hpo.io.loincparser;
 
 
 import org.monarchinitiative.loinc2hpo.except.Loinc2HpoRunTimeException;
-import org.monarchinitiative.loinc2hpo.model.loinc.LoincId;
+import org.monarchinitiative.loinc2hpocore.loinc.LoincId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
