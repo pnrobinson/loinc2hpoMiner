@@ -1,5 +1,6 @@
 package org.monarchinitiative.loinc2hpo.io.loincparser;
 
+import org.monarchinitiative.loinc2hpocore.loinc.LoincLongName;
 import org.monarchinitiative.phenol.ontology.data.Term;
 
 import java.util.LinkedList;
@@ -20,11 +21,11 @@ public class HpoClassFound implements Comparable<HpoClassFound> {
     // (split by '/') in the form of HP_12345
     private String label; //all classes should have a non-null label
     private String definition; //some classes do not have a definition
-    private final LoincLongNameComponents loinc; //We found this HPO class with this loinc query
+    private final LoincLongName loinc; //We found this HPO class with this loinc query
     private final int score; //how well the HPO class matches the loinc code (long
                         // common name)
 
-    public HpoClassFound(String id, String label, String definition, LoincLongNameComponents loinc) {
+    public HpoClassFound(String id, String label, String definition, LoincLongName loinc) {
         this.id = id;
         this.label = label;
         this.definition = definition;
@@ -36,11 +37,11 @@ public class HpoClassFound implements Comparable<HpoClassFound> {
         }
     }
 
-    public HpoClassFound(Term term, LoincLongNameComponents loincLongNameComponents) {
+    public HpoClassFound(Term term, LoincLongName loincLongName) {
         this.id = term.getId().getValue();
         this.label = term.getName();
         this.definition = term.getDefinition();
-        this.loinc = loincLongNameComponents;
+        this.loinc = loincLongName;
         if (loinc != null) {
             this.score = calculatePriority();
         } else {
