@@ -28,13 +28,13 @@ public class LoincVsHpoQuery {
 
 
     public List<HpoClassFound> queryByString(String keysString,
-                         LoincLongNameComponents loincLongNameComponents) {
+                         LoincLongName loincLongNameComponents) {
         String [] keys = keysString.split("[ ,-;]");
         return queryByString(List.of(keys), loincLongNameComponents);
     }
 
     public List<HpoClassFound> queryByString(List<String> queries,
-                                             LoincLongNameComponents loincLongNameComponents) {
+                                             LoincLongName loincLongNameComponents) {
         return query_impl(queries, loincLongNameComponents);
     }
 

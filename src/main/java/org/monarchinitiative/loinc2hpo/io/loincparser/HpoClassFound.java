@@ -130,7 +130,7 @@ public class HpoClassFound implements Comparable<HpoClassFound> {
         return this.definition;
     }
 
-    public LoincLongNameComponents getLoinc() {
+    public LoincLongName getLoinc() {
         return loinc;
     }
 
