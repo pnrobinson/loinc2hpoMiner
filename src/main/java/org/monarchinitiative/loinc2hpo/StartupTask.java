@@ -58,6 +58,7 @@ public final class StartupTask extends Task<Void> {
         This way we ensure that GUI elements dependent on ontology presence (labels, buttons) stay disabled
         and that the user will be notified about the fact that the ontology is missing.
          */
+        LOGGER.info("Starting Startup task");
         ingestOntology();
         ingestLoincTable();
         return null;
@@ -102,6 +103,7 @@ public final class StartupTask extends Task<Void> {
      */
     private void ingestOntology() {
         String ontologyPath = optionalResources.getHpoJsonPath();
+        LOGGER.info("Ingesting HPO from {}", ontologyPath);
         if (ontologyPath != null) {
             final File hpJsonFile = new File(ontologyPath);
             if (hpJsonFile.isFile()) {

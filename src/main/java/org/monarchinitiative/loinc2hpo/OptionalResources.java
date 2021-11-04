@@ -40,12 +40,12 @@ public class OptionalResources {
     public Map<LoincId, LoincEntry> getLoincTableMap() {
         return loincTableMap.get();
     }
-
     public ObjectProperty<Map<LoincId, LoincEntry>> loincTableMapProperty() {
         return loincTableMap;
     }
 
     public void setLoincTableMap(Map<LoincId, LoincEntry> loincTableMap) {
+
         this.loincTableMap.set(loincTableMap);
     }
 
