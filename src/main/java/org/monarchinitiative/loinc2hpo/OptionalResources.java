@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -87,16 +88,24 @@ public class OptionalResources {
                 this.loincAnnotationMap = parser.loincToHpoAnnotationMap();
             }catch (Loinc2HpoRunTimeException  e) {
                 e.printStackTrace();
+                LOGGER.error("Could not parse loinc2hpo-annotation.tsv: {}",e.getMessage());
+                return Map.of(); // initialization failed
             }
         }
         return this.loincAnnotationMap;
     }
 
+    /** Convert the list of {@link LoincAnnotation} objects (which can
+     * contain multiple {@link Loinc2HpoAnnotation} objects) into a
+     * flat list of {@link Loinc2HpoAnnotation} objects
+     *
+     * @return {@link Loinc2HpoAnnotation} objects (curated annotations)
+     */
     public List<Loinc2HpoAnnotation> getIndividualLoinc2HpoAnnotations() {
         Map<LoincId, LoincAnnotation> annotMap = getLoincAnnotations();
         return annotMap.values().stream()
                 .map(LoincAnnotation::allAnnotations)
-                .flatMap(x -> x.stream())
+                .flatMap(Collection::stream)
                 .collect(Collectors.toList());
     }
 
