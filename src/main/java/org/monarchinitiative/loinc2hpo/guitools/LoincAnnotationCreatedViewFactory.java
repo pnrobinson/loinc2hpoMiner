@@ -1,6 +1,6 @@
 package org.monarchinitiative.loinc2hpo.guitools;
 
-import org.monarchinitiative.loinc2hpocore.annotationmodel.LoincAnnotation;
+import org.monarchinitiative.loinc2hpocore.annotation.LoincAnnotation;
 import org.monarchinitiative.loinc2hpocore.loinc.LoincId;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;

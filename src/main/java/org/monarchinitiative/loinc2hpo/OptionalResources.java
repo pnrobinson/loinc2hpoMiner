@@ -8,8 +8,8 @@ import javafx.beans.property.StringProperty;
 import org.monarchinitiative.loinc2hpo.except.Loinc2HpoRunTimeException;
 import org.monarchinitiative.loinc2hpo.io.loincparser.LoincVsHpoQuery;
 import org.monarchinitiative.loinc2hpo.model.Settings;
-import org.monarchinitiative.loinc2hpocore.annotationmodel.Loinc2HpoAnnotation;
-import org.monarchinitiative.loinc2hpocore.annotationmodel.LoincAnnotation;
+import org.monarchinitiative.loinc2hpocore.annotation.Loinc2HpoAnnotation;
+import org.monarchinitiative.loinc2hpocore.annotation.LoincAnnotation;
 import org.monarchinitiative.loinc2hpocore.io.Loinc2HpoAnnotationParser;
 import org.monarchinitiative.loinc2hpocore.loinc.LoincEntry;
 import org.monarchinitiative.loinc2hpocore.loinc.LoincId;
@@ -45,7 +45,6 @@ public class OptionalResources {
     }
 
     public void setLoincTableMap(Map<LoincId, LoincEntry> loincTableMap) {
-
         this.loincTableMap.set(loincTableMap);
     }
 
@@ -67,9 +66,16 @@ public class OptionalResources {
         return annotationFile;
     }
     public void setAnnotationFile(String annotationFile) {
+        LOGGER.info("Setting Loinc2Hpo annotation file: {}", annotationFile);
         this.annotationFile.set(annotationFile);
     }
     private Map<LoincId, LoincAnnotation> loincAnnotationMap = null;
+
+    /**
+     * Create a map of annotations. When this function is called, it will read the
+     * loinc2hpo-annotations.tsv file if the map has not yet been initialized
+     * @return Map of curated LOINC2HPO annotations
+     */
     public Map<LoincId, LoincAnnotation> getLoincAnnotations()   {
         if (loincAnnotationMap == null) {
             if (annotationFileProperty() == null) {
@@ -109,6 +115,7 @@ public class OptionalResources {
     }
 
     public void setBiocurator(String id) {
+        LOGGER.info("Setting biocurator id: {}", id);
         biocurator.setValue(id);
     }
 
@@ -131,6 +138,7 @@ public class OptionalResources {
     }
 
     public void setLoincCoreTable(String loincCoreTable) {
+        LOGGER.info("Setting loincCoreTable to {}", loincCoreTable);
         this.loincCoreTable.set(loincCoreTable);
     }
 
@@ -143,6 +151,7 @@ public class OptionalResources {
     }
 
     public void setHpoJsonPath(String hpoJsonPath) {
+        LOGGER.info("Setting hp.josn path: {}", hpoJsonPath);
         this.hpoJsonPath.set(hpoJsonPath);
     }
 

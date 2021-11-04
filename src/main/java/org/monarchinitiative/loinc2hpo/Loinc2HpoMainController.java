@@ -23,7 +23,7 @@ import org.monarchinitiative.loinc2hpo.guitools.*;
 import org.monarchinitiative.loinc2hpo.io.HpoMenuDownloader;
 import org.monarchinitiative.loinc2hpo.io.loincparser.*;
 import org.monarchinitiative.loinc2hpo.model.*;
-import org.monarchinitiative.loinc2hpocore.annotationmodel.*;
+import org.monarchinitiative.loinc2hpocore.annotation.*;
 import org.monarchinitiative.loinc2hpocore.codesystems.Outcome;
 import org.monarchinitiative.loinc2hpocore.io.Loinc2HpoAnnotationParser;
 import org.monarchinitiative.loinc2hpocore.loinc.LoincEntry;

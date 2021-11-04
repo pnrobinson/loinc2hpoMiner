@@ -267,7 +267,7 @@
                                        <TableColumn fx:id="loincScaleColumn" resizable="false" text="Scale" />
                                        <TableColumn fx:id="testResultColumn" prefWidth="200.0" resizable="false" text="Test result" />
                                        <TableColumn fx:id="annotatedHpoColumn" prefWidth="200.0" resizable="false" text="HPO" />
-                                       <TableColumn fx:id="Comment" minWidth="75.0" prefWidth="120.0" text="Comment" />
+                                       <TableColumn fx:id="commentColumn" minWidth="75.0" prefWidth="120.0" text="Comment" />
                                    </columns>
                                    <columnResizePolicy>
                                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />

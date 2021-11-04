@@ -66,6 +66,10 @@ public final class StartupTask extends Task<Void> {
         return null;
     }
 
+    private void ingestLoinc2HpoAnnotations() {
+       // optionalResources.lo
+    }
+
 
     private void ingestLoincTable() {
         String loincTablePath = optionalResources.getLoincCoreTablePath();
