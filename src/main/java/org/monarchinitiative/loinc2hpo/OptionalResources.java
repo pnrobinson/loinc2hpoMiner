@@ -76,13 +76,17 @@ public class OptionalResources {
      * @return Map of curated LOINC2HPO annotations
      */
     public Map<LoincId, LoincAnnotation> getLoincAnnotations()   {
+        if (annotationFileProperty() == null) {
+            return Map.of();
+        }
+        String annotationFilePath = annotationFileProperty().get();
+        if (annotationFilePath == null) {
+            return Map.of();
+        }
         if (loincAnnotationMap == null) {
-            if (annotationFileProperty() == null) {
-                return Map.of();
-            }
+
             try {
-                String path = annotationFileProperty().get();
-                Loinc2HpoAnnotationParser parser = new Loinc2HpoAnnotationParser(path);
+                Loinc2HpoAnnotationParser parser = new Loinc2HpoAnnotationParser(annotationFilePath);
                 this.loincAnnotationMap = parser.loincToHpoAnnotationMap();
             }catch (Loinc2HpoRunTimeException  e) {
                 e.printStackTrace();

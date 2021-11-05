@@ -1160,10 +1160,17 @@ public class Loinc2HpoMainController {
 
     // Annotation table
     private String getAnnotationSummaryHTML() {
+        int n_annotatedLoincs = 0;
+        if (optionalResources.getLoincAnnotations().isEmpty()) {
+            PopUps.showInfoMessage("No LOINC annotations found",
+                    "Have you initialized the settings?");
+        } else {
+            n_annotatedLoincs = optionalResources.getLoincAnnotations().size();
+        }
         return "<html><body>\n" +
                 inlineCSS() +
                 "<ul><li>Number of HPO Terms " + optionalResources.getOntology().countNonObsoleteTerms() +"</li>" +
-                "<li>Number of annotated LOINC codes: " + optionalResources.getLoincAnnotations().size() + "</li></ol>"
+                "<li>Number of annotated LOINC codes: " + n_annotatedLoincs + "</li></ol>"
          + "</body></html>";
     }
 
