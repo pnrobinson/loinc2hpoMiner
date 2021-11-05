@@ -14,7 +14,6 @@ import org.monarchinitiative.loinc2hpocore.io.Loinc2HpoAnnotationParser;
 import org.monarchinitiative.loinc2hpocore.loinc.LoincEntry;
 import org.monarchinitiative.loinc2hpocore.loinc.LoincId;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
-import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
@@ -103,6 +101,12 @@ public class OptionalResources {
      */
     public List<Loinc2HpoAnnotation> getIndividualLoinc2HpoAnnotations() {
         Map<LoincId, LoincAnnotation> annotMap = getLoincAnnotations();
+        if (annotMap == null) {
+            LOGGER.error("getIndividualLoinc2HpoAnnotations: annotMap is NULL");
+            return List.of();
+        } else {
+            LOGGER.info("AnnotMap has {} entries", annotMap.size());
+        }
         return annotMap.values().stream()
                 .map(LoincAnnotation::allAnnotations)
                 .flatMap(Collection::stream)

@@ -169,8 +169,7 @@ public class Loinc2HpoMainController {
     private TableColumn<Loinc2HpoAnnotation, String> annotatedHpoColumn;
     @FXML
     private TableColumn<Loinc2HpoAnnotation, String> loincScaleColumn;
-    @FXML
-    private TableColumn<Loinc2HpoAnnotation, String> commentColumn;
+
 
     private BooleanProperty isPresentOrd = new SimpleBooleanProperty(false);
     private BooleanProperty configurationComplete = new SimpleBooleanProperty(false);
@@ -271,9 +270,8 @@ public class Loinc2HpoMainController {
         loincNumberColumn.setSortable(true);
         loincNumberColumn.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getLoincId().toString()));
         loincScaleColumn.setSortable(true);
-        loincScaleColumn.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getLoincScale().toString()));
+        loincScaleColumn.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getLoincScale().shortName()));
         testResultColumn.setSortable(true);
-        //belowNormalHpoColumn.setCellValueFactory(cdf -> cdf.getValue().whenValueLow() == null ? new ReadOnlyStringWrapper("\" \"") : new ReadOnlyStringWrapper(termMap.get(cdf.getValue().whenValueLow()).getName()));
         testResultColumn.setCellValueFactory(cdf -> {
             Outcome testOutcome = cdf.getValue().getOutcome();
             return new ReadOnlyStringWrapper(testOutcome.toString());
@@ -290,9 +288,7 @@ public class Loinc2HpoMainController {
             }
         });
 
-        commentColumn.setSortable(true);
-        commentColumn.setCellValueFactory(cdf -> cdf.getValue() == null ? new ReadOnlyStringWrapper("") :
-                new ReadOnlyStringWrapper(cdf.getValue().getComment()));
+
         updateAnnotationSummaryWebview();
         refreshLoinc2HpoAnnotationTable();
     }
@@ -1180,7 +1176,7 @@ public class Loinc2HpoMainController {
         return "<html><body>\n" +
                 inlineCSS() +
                 "<ul><li>Number of HPO Terms " + optionalResources.getOntology().countNonObsoleteTerms() +"</li>" +
-                "<li>Number of annotation LOINC codes: " + optionalResources.getLoincAnnotations().size() + "</li></ol>"
+                "<li>Number of annotated LOINC codes: " + optionalResources.getLoincAnnotations().size() + "</li></ol>"
          + "</body></html>";
     }
 
@@ -1319,29 +1315,18 @@ public class Loinc2HpoMainController {
         hpoAnnotationTable.getItems().clear();
         TermId hpoTermId = annot.getHpoTermId();
         Optional<String> opt = optionalResources.getOntology().getTermLabel(hpoTermId);
-        String label = opt.isPresent() ? opt.get() : "n/a";
+        String label = opt.orElse("n/a");
         List<HpoAnnotationRow> rows = new ArrayList<>();
-        HpoAnnotationRow row;
-        switch (outcome.getCode()) {
-                case H:
-                    row = HpoAnnotationRow.qnHigh(hpoTermId,label);
-                    break;
-                case L:
-                    row = HpoAnnotationRow.qnLow(hpoTermId,label);
-                    break;
-                case N:
-                    row = HpoAnnotationRow.normal(hpoTermId, label);
-                    break;
-                case A:
-                    row = HpoAnnotationRow.ordAbnormal(hpoTermId, label);
-                    break;
-                case NOM:
-                    row = HpoAnnotationRow.nominal(hpoTermId, label);
-                    break;
-                default:
+        HpoAnnotationRow row = switch (outcome.getCode()) {
+            case H -> HpoAnnotationRow.qnHigh(hpoTermId, label);
+            case L -> HpoAnnotationRow.qnLow(hpoTermId, label);
+            case N -> HpoAnnotationRow.normal(hpoTermId, label);
+            case A -> HpoAnnotationRow.ordAbnormal(hpoTermId, label);
+            case NOM -> HpoAnnotationRow.nominal(hpoTermId, label);
+            default ->
                     // should never ever happen
                     throw new Loinc2HpoRunTimeException("Did not recognize label: " + outcome.getCode());
-        }
+        };
         rows.add(row);
         ObservableList<HpoAnnotationRow> result = FXCollections.observableArrayList(rows);
         runLater(() -> {
