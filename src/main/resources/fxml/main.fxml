@@ -58,33 +58,34 @@
        <SplitPane dividerPositions="0.4605475040257649" orientation="VERTICAL" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1">
            <SplitPane dividerPositions="0.6185308848080133">
                <VBox>
-               <GridPane>
-                 <columnConstraints>
-                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="465.0" minWidth="10.0" prefWidth="302.0" />
-                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="639.0" minWidth="10.0" prefWidth="639.0" />
-                 </columnConstraints>
-                 <rowConstraints>
-                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                 </rowConstraints>
-                  <children>
-                     <Button mnemonicParsing="false" onAction="#searchHpoByString" stylesheets="@../css/loinc2hpo.css" text="Search HPO">
-                        <GridPane.margin>
-                           <Insets left="20.0" />
-                        </GridPane.margin>
-                     </Button>
-                          <TextField fx:id="userInputForManualQuery" onAction="#handleManualQueryButton" prefHeight="24.0" prefWidth="733.0" promptText="comma seperated keys" GridPane.columnIndex="1">
-                        <padding>
-                           <Insets left="10.0" right="10.0" />
-                        </padding>
-                          </TextField>
-                          <Button fx:id="searchHpoByLoincButton" mnemonicParsing="false" onAction="#searchHpoByLoinc" stylesheets="@../css/loinc2hpo.css" text="Search HPO by LOINC" GridPane.rowIndex="1">
-                        <GridPane.margin>
-                           <Insets left="20.0" />
-                        </GridPane.margin>
-                          </Button>
-                  </children>
-               </GridPane>
+                   <GridPane>
+                       <columnConstraints>
+                           <ColumnConstraints hgrow="SOMETIMES" maxWidth="465.0" minWidth="10.0" prefWidth="302.0"/>
+                           <ColumnConstraints hgrow="SOMETIMES" maxWidth="639.0" minWidth="10.0" prefWidth="639.0"/>
+                       </columnConstraints>
+                       <rowConstraints>
+                           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                       </rowConstraints>
+                       <Button mnemonicParsing="false" onAction="#searchHpoByString" stylesheets="@../css/loinc2hpo.css"
+                               text="Search HPO">
+                           <GridPane.margin>
+                               <Insets left="20.0"/>
+                           </GridPane.margin>
+                       </Button>
+                       <TextField fx:id="userInputForManualQuery" onAction="#handleManualQueryButton" prefHeight="24.0"
+                                  prefWidth="733.0" promptText="comma seperated keys" GridPane.columnIndex="1">
+                           <padding>
+                               <Insets left="10.0" right="10.0"/>
+                           </padding>
+                       </TextField>
+                       <Button fx:id="searchHpoByLoincButton" mnemonicParsing="false" onAction="#searchHpoByLoinc"
+                               stylesheets="@../css/loinc2hpo.css" text="Search HPO by LOINC" GridPane.rowIndex="1">
+                           <GridPane.margin>
+                               <Insets left="20.0"/>
+                           </GridPane.margin>
+                       </Button>
+                   </GridPane>
                    <HBox VBox.vgrow="NEVER">
                        <VBox.margin>
                            <Insets />
@@ -143,38 +144,41 @@
                            <Insets bottom="20.0" left="10.0" right="10.0" />
                        </VBox.margin>
                    </ListView>
-               <GridPane>
-                 <columnConstraints>
-                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="454.0" minWidth="10.0" prefWidth="274.0" />
-                   <ColumnConstraints hgrow="SOMETIMES" maxWidth="751.0" minWidth="10.0" prefWidth="660.0" />
-                 </columnConstraints>
-                 <rowConstraints>
-                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                 </rowConstraints>
-                  <children>
-                          <Button fx:id="initLOINCtableButton" mnemonicParsing="false" onAction="#initLOINCtable" stylesheets="@../css/loinc2hpo.css" text="Inititialize">
-                        <GridPane.margin>
-                           <Insets left="20.0" />
-                        </GridPane.margin>
-                          </Button>
-                          <Button fx:id="userSuppliedLoincCodes" mnemonicParsing="false" onAction="#handleLoincFiltering" stylesheets="@../css/loinc2hpo.css" text="Load user-supplied LOINC codes" GridPane.columnIndex="1">
-                        <GridPane.margin>
-                           <Insets left="20.0" />
-                        </GridPane.margin>
-                          </Button>
-                          <Button fx:id="searchForLOINCIdButton" mnemonicParsing="false" onAction="#searchByLoincId" stylesheets="@../css/loinc2hpo.css" text="Search by LOINC id" GridPane.rowIndex="1">
-                        <GridPane.margin>
-                           <Insets left="20.0" />
-                        </GridPane.margin>
-                          </Button>
-                          <TextField fx:id="loincSearchTextField" onAction="#searchByLoincId" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                        <GridPane.margin>
-                           <Insets left="20.0" right="20.0" />
-                        </GridPane.margin>
-                          </TextField>
-                  </children>
-               </GridPane>
+                   <GridPane>
+                       <columnConstraints>
+                           <ColumnConstraints hgrow="SOMETIMES" maxWidth="454.0" minWidth="10.0" prefWidth="274.0"/>
+                           <ColumnConstraints hgrow="SOMETIMES" maxWidth="751.0" minWidth="10.0" prefWidth="660.0"/>
+                       </columnConstraints>
+                       <rowConstraints>
+                           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                       </rowConstraints>
+                       <Button fx:id="initLOINCtableButton" mnemonicParsing="false" onAction="#initLOINCtable"
+                               stylesheets="@../css/loinc2hpo.css" text="Inititialize">
+                           <GridPane.margin>
+                               <Insets left="20.0"/>
+                           </GridPane.margin>
+                       </Button>
+                       <Button fx:id="userSuppliedLoincCodes" mnemonicParsing="false" onAction="#handleLoincFiltering"
+                               stylesheets="@../css/loinc2hpo.css" text="Load user-supplied LOINC codes"
+                               GridPane.columnIndex="1">
+                           <GridPane.margin>
+                               <Insets left="20.0"/>
+                           </GridPane.margin>
+                       </Button>
+                       <Button fx:id="searchForLOINCIdButton" mnemonicParsing="false" onAction="#searchByLoincId"
+                               stylesheets="@../css/loinc2hpo.css" text="Search by LOINC id" GridPane.rowIndex="1">
+                           <GridPane.margin>
+                               <Insets left="20.0"/>
+                           </GridPane.margin>
+                       </Button>
+                       <TextField fx:id="loincSearchTextField" onAction="#searchByLoincId" GridPane.columnIndex="1"
+                                  GridPane.rowIndex="1">
+                           <GridPane.margin>
+                               <Insets left="20.0" right="20.0"/>
+                           </GridPane.margin>
+                       </TextField>
+                   </GridPane>
                    <HBox prefHeight="0.0" prefWidth="737.0">
                        <VBox.margin>
                            <Insets />
@@ -182,11 +186,9 @@
                    </HBox>
                </VBox>
                <VBox>
-               <HBox prefHeight="100.0" prefWidth="200.0">
-                  <children>
-                     <Label stylesheets="@../css/loinc2hpo.css" text="Create LOINC2HPO Annotation" />
-                  </children>
-               </HBox>
+                   <HBox prefHeight="100.0" prefWidth="200.0">
+                       <Label stylesheets="@../css/loinc2hpo.css" text="Create LOINC2HPO Annotation"/>
+                   </HBox>
                    <HBox spacing="20.0">
                        <VBox.margin>
                            <Insets left="20.0" top="5.0" />
@@ -245,6 +247,13 @@
                                <columnResizePolicy>
                                    <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                                </columnResizePolicy>
+                               <contextMenu>
+                                   <ContextMenu fx:id="loincContextMenu">
+                                       <items>
+                                           <MenuItem mnemonicParsing="false" onAction="#editExistingLoincAnnotation" text="edit annotation" />
+                                       </items>
+                                   </ContextMenu>
+                               </contextMenu>
                            </TableView>
                        </AnchorPane>
                    </TitledPane>
@@ -254,12 +263,10 @@
                            <AnchorPane>
                                <TableView fx:id="loincAnnotationTableView" AnchorPane.bottomAnchor="40.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="40.0">
                                    <columns>
-                                       <TableColumn fx:id="loincNumberColumn" prefWidth="150.0" resizable="false" text="LOINC Num" />
-                                       <TableColumn fx:id="loincScaleColumn" resizable="false" text="Scale" />
-                                       <TableColumn fx:id="belowNormalHpoColumn" prefWidth="200.0" resizable="false" text="Below normal" />
-                                       <TableColumn fx:id="notAbnormalHpoColumn" prefWidth="200.0" resizable="false" text="Normal" />
-                                       <TableColumn fx:id="aboveNormalHpoColumn" prefWidth="200.0" resizable="false" text="Above normal" />
-                                       <TableColumn fx:id="noteColumn" minWidth="75.0" prefWidth="120.0" text="Note" />
+                                       <TableColumn fx:id="loincNumberColumn" prefWidth="100.0" resizable="false" text="LOINC Num" />
+                                       <TableColumn fx:id="loincScaleColumn" prefWidth="70.0" resizable="false" text="Scale" />
+                                       <TableColumn fx:id="testResultColumn" prefWidth="200.0" text="Test result" />
+                                       <TableColumn fx:id="annotatedHpoColumn" prefWidth="300.0" resizable="false" text="HPO" />
                                    </columns>
                                    <columnResizePolicy>
                                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />

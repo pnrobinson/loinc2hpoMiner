@@ -32,33 +32,30 @@ public class Settings {
 
     private static Logger logger = LoggerFactory.getLogger(Settings.class);
 
-    private StringProperty hpoJsonPath;
-    private StringProperty loincCoreTablePath;
+    private final StringProperty hpoJsonPath;
+    private final StringProperty loincCoreTablePath;
     /** Path to the LOINC2HPO annotations.tsv file */
-    private StringProperty annotationFile;
-    private StringProperty biocuratorID;
-    private Map<String, String> userCreatedLoincListsColor;
-    private BooleanProperty isComplete = new SimpleBooleanProperty(false);
+    private final StringProperty annotationFile;
+    private final StringProperty biocuratorID;
+    private final BooleanProperty isComplete = new SimpleBooleanProperty(false);
 
     public Settings() {
         this.hpoJsonPath = new SimpleStringProperty();
         this.loincCoreTablePath = new SimpleStringProperty();
         this.annotationFile = new SimpleStringProperty();
         this.biocuratorID = new SimpleStringProperty();
-        this.userCreatedLoincListsColor = new HashMap<>();
     }
 
-    public Settings(String hpoJsonPath, String loincCoreTablePath, String annotationTsv, String biocuratorID, Map<String, String> userCreatedLoincListsColor) {
+    public Settings(String hpoJsonPath, String loincCoreTablePath, String annotationTsv, String biocuratorID) {
         this.hpoJsonPath = new SimpleStringProperty(hpoJsonPath);
         this.loincCoreTablePath = new SimpleStringProperty(loincCoreTablePath);
         this.annotationFile = new SimpleStringProperty(annotationTsv);
         this.biocuratorID = new SimpleStringProperty(biocuratorID);
-        this.userCreatedLoincListsColor = userCreatedLoincListsColor;
     }
 
     public static Settings loadSettings(Settings settings, String settingsPath) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(settingsPath));
-        String line = null;
+        String line;
         while ((line = br.readLine()) != null) {
             int idx=line.indexOf(":");
             if (idx<0) {
@@ -76,13 +73,6 @@ public class Settings {
                 case "loincTablePath" -> settings.setLoincCoreTablePath(value);
                 case "hp-json" -> settings.setHpoJsonPath(value);
                 case "autosave to" -> settings.setAnnotationFile(value);
-                case "loinc-list-color" -> {
-                    String[] entries = value.split("\\|");
-                    settings.setUserCreatedLoincListsColor(
-                            Arrays.stream(entries)
-                                    .map(e -> e.split(",")) //has to be two elements
-                                    .collect(Collectors.toMap(e -> e[0], e -> e[1])));
-                }
             }
         }
         br.close();
@@ -97,7 +87,6 @@ public class Settings {
             String pathToLoincCoreTableFile = settings.getLoincCoreTablePath();
             String pathToHpoJsonFile = settings.getHpoJsonPath();
             String pathToAutoSavedFolder = settings.getAnnotationFile();
-            Map<String, String> userCreatedLoincListsColor = settings.getUserCreatedLoincListsColor();
             if (biocuratorID!=null) {
                 bw.write(String.format("biocuratorid:%s\n",biocuratorID));
             }
@@ -110,14 +99,6 @@ public class Settings {
             }
             if (pathToAutoSavedFolder != null) {
                 bw.write(String.format("autosave to:%s\n", pathToAutoSavedFolder));
-            }
-            if (!userCreatedLoincListsColor.isEmpty()) {
-                bw.write("loinc-list-color:");
-                List<String> list_color_pair = userCreatedLoincListsColor.entrySet().stream()
-                        .map(e -> e.getKey() + "," + e.getValue())
-                        .collect(Collectors.toList());
-                bw.write(String.join("|", list_color_pair));
-                bw.write("\n");
             }
             bw.close();
         } catch (IOException e) {
@@ -207,14 +188,6 @@ public class Settings {
         this.isComplete.set(status());
     }
 
-    public Map<String, String> getUserCreatedLoincListsColor() {
-        return userCreatedLoincListsColor;
-    }
-
-    public void setUserCreatedLoincListsColor(Map<String, String> userCreatedLoincListsColor) {
-        this.userCreatedLoincListsColor = userCreatedLoincListsColor;
-    }
-
     public BooleanProperty isCompleteProperty() {
         return isComplete;
     }
@@ -227,13 +200,12 @@ public class Settings {
     }
 
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("hp.json: " + hpoJsonPath);
-        builder.append("\n");
-        builder.append("loincCoreTable: " + loincCoreTablePath);
-        builder.append("\n");
-        builder.append("annotationFile: " + annotationFile);
-        return builder.toString();
+        String builder = "hp.json: " + hpoJsonPath +
+                "\n" +
+                "loincCoreTable: " + loincCoreTablePath +
+                "\n" +
+                "annotationFile: " + annotationFile;
+        return builder;
     }
 
 

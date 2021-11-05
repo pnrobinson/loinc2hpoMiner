@@ -1,5 +1,6 @@
 package org.monarchinitiative.loinc2hpo.io.loincparser;
 
+import org.monarchinitiative.loinc2hpocore.loinc.LoincLongName;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.Term;
 import org.slf4j.Logger;
@@ -27,29 +28,30 @@ public class LoincVsHpoQuery {
 
 
     public List<HpoClassFound> queryByString(String keysString,
-                         LoincLongNameComponents loincLongNameComponents) {
+                         LoincLongName loincLongNameComponents) {
         String [] keys = keysString.split("[ ,-;]");
         return queryByString(List.of(keys), loincLongNameComponents);
     }
 
     public List<HpoClassFound> queryByString(List<String> queries,
-                                             LoincLongNameComponents loincLongNameComponents) {
+                                             LoincLongName loincLongNameComponents) {
         return query_impl(queries, loincLongNameComponents);
     }
 
 
-    public List<HpoClassFound> queryByLoincId(String keysString,
-                                              LoincLongNameComponents loincLongNameComponents) {
+    public List<HpoClassFound> queryByLoincLongName(String keysString,
+                                                    LoincLongName loincLongName) {
         String [] keys = keysString.split(" ");
-        return queryByLoincId(List.of(keys), loincLongNameComponents);
+        return queryByLoincLongName(List.of(keys), loincLongName);
     }
+
 
 
     /**
      * A method to do manual query with provided keys (literally)
      */
-    public List<HpoClassFound> queryByLoincId(List<String> keys,
-                                              LoincLongNameComponents loincLongNameComponents) {
+    public List<HpoClassFound> queryByLoincLongName(List<String> keys,
+                                                    LoincLongName loincLongNameComponents) {
         if (keys == null || keys.isEmpty()) {
             throw new IllegalArgumentException();
         } else {
@@ -63,7 +65,9 @@ public class LoincVsHpoQuery {
     }
 
 
-    private List<HpoClassFound> query_impl(List<String> items, LoincLongNameComponents loincLongNameComponents) {
+
+
+    private List<HpoClassFound> query_impl(List<String> items, LoincLongName loincLongNameComponents) {
         items = items.stream().filter(s -> ! omitWords.contains(s)).collect(Collectors.toList());
         LOGGER.info("got {} search items",items.size());
         List<HpoClassFound> foundList = new ArrayList<>();
@@ -84,10 +88,9 @@ public class LoincVsHpoQuery {
 
 
     private Set<String> getWords(Term term) {
-        Set<String> words = new HashSet<>();
         String label = term.getName();
         String [] labelWords = label.split("\s+");
-        words.addAll(List.of(labelWords));
+        Set<String> words = new HashSet<>(List.of(labelWords));
         for (var synonym: term.getSynonyms()) {
             String synonymLabel = synonym.getValue();
             //System.out.println(synonymLabel);
@@ -96,6 +99,7 @@ public class LoincVsHpoQuery {
         }
         return words;
     }
+
 
 
 }

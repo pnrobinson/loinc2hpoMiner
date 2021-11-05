@@ -85,9 +85,8 @@ public class HpoMenuDownloader extends Task<Void>  {
 
     protected static URLConnection connect(URLConnection conn, int connectionTimeout, String acceptHeaders, Set<String> visited)
             throws IOException {
-        if (conn instanceof HttpURLConnection) {
+        if (conn instanceof HttpURLConnection con) {
             // follow redirects to HTTPS
-            HttpURLConnection con = (HttpURLConnection) conn;
             con.connect();
             int responseCode = con.getResponseCode();
             // redirect
@@ -122,7 +121,7 @@ public class HpoMenuDownloader extends Task<Void>  {
 
 
     @Override
-    protected Void call() throws Exception {
+    protected Void call() {
         downloadHpo(localHpoHjsonPath);
         return null;
     }

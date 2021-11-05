@@ -5,16 +5,23 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import org.monarchinitiative.loinc2hpo.except.Loinc2HpoRunTimeException;
 import org.monarchinitiative.loinc2hpo.io.loincparser.LoincVsHpoQuery;
-import org.monarchinitiative.loinc2hpo.model.Loinc2HpoAnnotationModel;
 import org.monarchinitiative.loinc2hpo.model.Settings;
-import org.monarchinitiative.loinc2hpo.model.loinc.LoincEntry;
-import org.monarchinitiative.loinc2hpo.model.loinc.LoincId;
+import org.monarchinitiative.loinc2hpocore.annotation.Loinc2HpoAnnotation;
+import org.monarchinitiative.loinc2hpocore.annotation.LoincAnnotation;
+import org.monarchinitiative.loinc2hpocore.io.Loinc2HpoAnnotationParser;
+import org.monarchinitiative.loinc2hpocore.loinc.LoincEntry;
+import org.monarchinitiative.loinc2hpocore.loinc.LoincId;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 public class OptionalResources {
@@ -32,7 +39,6 @@ public class OptionalResources {
     public Map<LoincId, LoincEntry> getLoincTableMap() {
         return loincTableMap.get();
     }
-
     public ObjectProperty<Map<LoincId, LoincEntry>> loincTableMapProperty() {
         return loincTableMap;
     }
@@ -47,20 +53,64 @@ public class OptionalResources {
 
     private final StringProperty loincCoreTable = new SimpleStringProperty(this, null);
 
-    private final StringProperty annotationFile = new SimpleStringProperty(this, null);
 
     private final StringProperty hpoJsonPath = new SimpleStringProperty(this, null);
 
+    /** The annotation file and the loinc2HpoAnnotations are the user-defined LOINC2HPO annotations. */
+    private final StringProperty annotationFile = new SimpleStringProperty(this, null);
     public String getAnnotationFile() {
         return annotationFile.get();
     }
-
     public StringProperty annotationFileProperty() {
         return annotationFile;
     }
-
     public void setAnnotationFile(String annotationFile) {
+        LOGGER.info("Setting Loinc2Hpo annotation file: {}", annotationFile);
         this.annotationFile.set(annotationFile);
+    }
+    private Map<LoincId, LoincAnnotation> loincAnnotationMap = null;
+
+    /**
+     * Create a map of annotations. When this function is called, it will read the
+     * loinc2hpo-annotations.tsv file if the map has not yet been initialized
+     * @return Map of curated LOINC2HPO annotations
+     */
+    public Map<LoincId, LoincAnnotation> getLoincAnnotations()   {
+        if (loincAnnotationMap == null) {
+            if (annotationFileProperty() == null) {
+                return Map.of();
+            }
+            try {
+                String path = annotationFileProperty().get();
+                Loinc2HpoAnnotationParser parser = new Loinc2HpoAnnotationParser(path);
+                this.loincAnnotationMap = parser.loincToHpoAnnotationMap();
+            }catch (Loinc2HpoRunTimeException  e) {
+                e.printStackTrace();
+                LOGGER.error("Could not parse loinc2hpo-annotation.tsv: {}",e.getMessage());
+                return Map.of(); // initialization failed
+            }
+        }
+        return this.loincAnnotationMap;
+    }
+
+    /** Convert the list of {@link LoincAnnotation} objects (which can
+     * contain multiple {@link Loinc2HpoAnnotation} objects) into a
+     * flat list of {@link Loinc2HpoAnnotation} objects
+     *
+     * @return {@link Loinc2HpoAnnotation} objects (curated annotations)
+     */
+    public List<Loinc2HpoAnnotation> getIndividualLoinc2HpoAnnotations() {
+        Map<LoincId, LoincAnnotation> annotMap = getLoincAnnotations();
+        if (annotMap == null) {
+            LOGGER.error("getIndividualLoinc2HpoAnnotations: annotMap is NULL");
+            return List.of();
+        } else {
+            LOGGER.info("AnnotMap has {} entries", annotMap.size());
+        }
+        return annotMap.values().stream()
+                .map(LoincAnnotation::allAnnotations)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
     }
 
     public Ontology getOntology() {
@@ -78,6 +128,7 @@ public class OptionalResources {
     }
 
     public void setBiocurator(String id) {
+        LOGGER.info("Setting biocurator id: {}", id);
         biocurator.setValue(id);
     }
 
@@ -100,6 +151,7 @@ public class OptionalResources {
     }
 
     public void setLoincCoreTable(String loincCoreTable) {
+        LOGGER.info("Setting loincCoreTable to {}", loincCoreTable);
         this.loincCoreTable.set(loincCoreTable);
     }
 
@@ -112,6 +164,7 @@ public class OptionalResources {
     }
 
     public void setHpoJsonPath(String hpoJsonPath) {
+        LOGGER.info("Setting hp.josn path: {}", hpoJsonPath);
         this.hpoJsonPath.set(hpoJsonPath);
     }
 
@@ -122,17 +175,7 @@ public class OptionalResources {
         setHpoJsonPath(settings.getHpoJsonPath());
     }
 
-    private Map<LoincId, Loinc2HpoAnnotationModel> loincAnnotationMap = null;
 
-    public Map<LoincId, Loinc2HpoAnnotationModel> getLoincAnnotationMap (){
-        if (loincAnnotationMap == null) {
-            if (annotationFileProperty() == null) {
-                return Map.of();
-            }
-            this.loincAnnotationMap = Loinc2HpoAnnotationModel.from_csv(annotationFileProperty().get());
-        }
-        return this.loincAnnotationMap;
-    }
     private LoincVsHpoQuery loincVsHpoQuery = null;
 
     public LoincVsHpoQuery getLoincVsHpoQuery(){

@@ -3,7 +3,6 @@ package org.monarchinitiative.loinc2hpo.guitools;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.layout.*;
-import javafx.scene.shape.Box;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.scene.Scene;
@@ -56,7 +55,7 @@ public class BooleanBox {
         final Button noButton = new Button("Cancel"); // No button for the user.
         VBox areaRight = new VBox();
         areaRight.setPrefSize(70, 20);
-        areaRight.setMargin(areaRight, new Insets(0, 0, 0, 50));
+        VBox.setMargin(areaRight, new Insets(0, 0, 0, 50));
         hbox.getChildren().addAll(yesButton, areaRight, noButton);
         vbox.getChildren().addAll(wview, hbox);
         pane.getChildren().add(vbox);
