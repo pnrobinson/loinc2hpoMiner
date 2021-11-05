@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.monarchinitiative.loinc2hpo-mine</groupId>
     <artifactId>loinc2hpo-miner</artifactId>
-    <version>0.1.1</version>
+    <version>0.1.2</version>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -27,7 +27,7 @@
         <slf4j.version>1.7.25</slf4j.version>
         <mockito.version>3.3.3</mockito.version>
         <jupiter.version>5.8.1</jupiter.version>
-        <jena.version>3.14.0</jena.version>
+        <loinc2hpo.version>1.5.8</loinc2hpo.version>
     </properties>
 
     <dependencies>
@@ -61,7 +61,7 @@
         <dependency>
             <groupId>org.monarchinitiative</groupId>
             <artifactId>loinc2hpo-core</artifactId>
-            <version>1.5.7</version>
+            <version>${loinc2hpo.version}</version>
         </dependency>
 
         <dependency>

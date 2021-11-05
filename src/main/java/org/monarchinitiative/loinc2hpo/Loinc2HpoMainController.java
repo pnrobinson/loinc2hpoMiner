@@ -21,7 +21,7 @@ import javafx.util.Callback;
 import org.monarchinitiative.loinc2hpo.except.Loinc2HpoRunTimeException;
 import org.monarchinitiative.loinc2hpo.guitools.*;
 import org.monarchinitiative.loinc2hpo.io.HpoMenuDownloader;
-import org.monarchinitiative.loinc2hpo.io.loincparser.*;
+import org.monarchinitiative.loinc2hpo.io.UserSuppliedLoincIdParser;
 import org.monarchinitiative.loinc2hpo.model.*;
 import org.monarchinitiative.loinc2hpocore.annotation.*;
 import org.monarchinitiative.loinc2hpocore.codesystems.Outcome;
@@ -322,7 +322,7 @@ public class Loinc2HpoMainController {
     private void updateHpoTermListView( List<HpoClassFound> result) {
         //among found terms, show those that are 1) HPO terms 2) not obsolete
         hpoQueryResult.addAll(result);
-        hpoQueryResult.sort((o1, o2) -> o2.getScore() - o1.getScore());
+        hpoQueryResult.sort((o1, o2) -> o2.priorityScore() - o1.priorityScore());
         LOGGER.trace("hpoQueryResult size: " + hpoQueryResult.size());
         if (hpoQueryResult.size() == 0) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -369,7 +369,7 @@ public class Loinc2HpoMainController {
         System.err.println("Got name: " + name);
         hpoListView.getItems().clear();
         LoincVsHpoQuery loincVsHpoQuery = optionalResources.getLoincVsHpoQuery();
-        List<HpoClassFound> foundHpoList = loincVsHpoQuery.queryByLoincLongName(name, entry.getLoincLongName());
+        List<HpoClassFound> foundHpoList = loincVsHpoQuery.queryByString(name);
         updateHpoTermListView(foundHpoList);
     }
 
@@ -396,7 +396,7 @@ public class Loinc2HpoMainController {
         System.err.println("Got name: " + name);
         hpoListView.getItems().clear();
         LoincVsHpoQuery loincVsHpoQuery = optionalResources.getLoincVsHpoQuery();
-        List<HpoClassFound> foundHpoList = loincVsHpoQuery.queryByLoincLongName(name, entry.getLoincLongName());
+        List<HpoClassFound> foundHpoList = loincVsHpoQuery.queryByString(name);
         updateHpoTermListView(foundHpoList);
     }
 
@@ -427,11 +427,8 @@ public class Loinc2HpoMainController {
                 keysInList.add(key);
             }
         }
-
-        String name = entry.getLongName();
-        LoincLongName loincLongName =  LoincLongName.of(name);
         LoincVsHpoQuery loincVsHpoQuery = optionalResources.getLoincVsHpoQuery();
-        List<HpoClassFound> queryResults = loincVsHpoQuery.queryByLoincLongName(keysInList, loincLongName);
+        List<HpoClassFound> queryResults = loincVsHpoQuery.queryByString(keysInList);
         if (queryResults.size() != 0) {
             ObservableList<HpoClassFound> items = FXCollections.observableArrayList();
             items.addAll(queryResults);
@@ -509,19 +506,8 @@ public class Loinc2HpoMainController {
         e.consume();
         String query = this.loincSearchTextField.getText().trim();
         if (query.isEmpty()) return;
-        List<LoincEntry> entrylist = new ArrayList<>();
-        try {
-            LoincId loincId = new LoincId(query);
-            if (this.loincmap.containsKey(loincId)) {
-                entrylist.add(this.loincmap.get(loincId));
-                LOGGER.debug(this.loincmap.get(loincId).getLoincId() + " : " + this.loincmap.get(loincId).getLongName());
-            } else { //correct loinc code form but not valid
-                throw new Exception();
-            }
-        } catch (Exception msg) {
-            PopUps.showException("Error", "Could not search LOINC data", msg);
-            return;
-        }
+        LoincQuery loincQuery = new LoincQuery( optionalResources.getLoincTableMap());
+        List<LoincEntry> entrylist = loincQuery.query(query);
         LOGGER.trace(String.format("Searching table for:  %s", query));
         LOGGER.trace("# of loinc entries found: " + entrylist.size());
         loincTableView.getItems().clear();
@@ -602,7 +588,7 @@ public class Loinc2HpoMainController {
         for (TermId t : descTids) {
             if (hpo.containsTerm(t)) {
                 Term term = hpo.getTermMap().get(t);
-                var hpoClass = new HpoClassFound(term.getId().getValue(), term.getName(), term.getDefinition(), null);
+                var hpoClass = new HpoClassFound(term.getId().getValue(), term.getName(), term.getDefinition());
                 foundlist.add(hpoClass);
             }
         }
@@ -626,7 +612,7 @@ public class Loinc2HpoMainController {
         for (TermId t : descTids) {
             if (hpo.containsTerm(t)) {
                 Term term = hpo.getTermMap().get(t);
-                var hpoClass = new HpoClassFound(term.getId().getValue(), term.getName(), term.getDefinition(), null);
+                var hpoClass = new HpoClassFound(term.getId().getValue(), term.getName(), term.getDefinition());
                 foundlist.add(hpoClass);
             }
         }
@@ -1136,6 +1122,7 @@ public class Loinc2HpoMainController {
                     String.format("An error occurred when trying to save data to %s. Try again!", annotationTSVSingleFile));
             return;
         }
+        PopUps.showInfoMessage("", "Successfully saved annotation data");
         e.consume();
     }
 
@@ -1269,34 +1256,6 @@ public class Loinc2HpoMainController {
         event.consume();
     }
 
-    protected void exportAnnotationsAsTSV() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Specify file name");
-        chooser.setInitialDirectory(new File(System.getProperty("user.home")));
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("TSV files (*.txt)", "*.tsv"));
-        File f = chooser.showSaveDialog(null);
-        boolean overwrite = false;
-        String path;
-        if (f != null) {
-            path = f.getAbsolutePath();
-            if (f.exists()) { //check if user wants to overwrite the existing file
-                overwrite = PopUps.getBooleanFromUser("Overwrite?",
-                        "File will be overwritten", null);
-            }
-
-            if (!f.exists() || overwrite) {/*  TODO
-                try {
-                   // Loinc2HpoAnnotation.to_csv_file(optionalResources.getLoincAnnotationMap(), path);
-                } catch (IOException e1) {
-                    String errorMsg = String.format("An error occurred when trying to save data to %s. Try again!", path);
-                    PopUps.showWarningDialog("Error message",
-                            "Failure to Save Session Data" ,errorMsg);
-                    LOGGER.error(errorMsg);
-                }
-                */
-            }
-        }
-    }
 
     public void editExistingLoincAnnotation(ActionEvent e) {
         e.consume();

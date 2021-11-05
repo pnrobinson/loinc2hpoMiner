@@ -1,9 +1,8 @@
-package org.monarchinitiative.loinc2hpo.io.loincparser;
+package org.monarchinitiative.loinc2hpo.model;
 
 import org.monarchinitiative.loinc2hpocore.loinc.LoincLongName;
 import org.monarchinitiative.phenol.ontology.data.Term;
 
-import java.util.LinkedList;
 import java.util.Queue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -21,32 +20,21 @@ public class HpoClassFound implements Comparable<HpoClassFound> {
     // (split by '/') in the form of HP_12345
     private String label; //all classes should have a non-null label
     private String definition; //some classes do not have a definition
-    private final LoincLongName loinc; //We found this HPO class with this loinc query
     private final int score; //how well the HPO class matches the loinc code (long
                         // common name)
 
-    public HpoClassFound(String id, String label, String definition, LoincLongName loinc) {
+    public HpoClassFound(String id, String label, String definition) {
         this.id = id;
         this.label = label;
         this.definition = definition;
-        this.loinc = loinc;
-        if (loinc != null) {
-            this.score = calculatePriority();
-        } else {
-            this.score = -999;
-        }
+        this.score = 0;
     }
 
-    public HpoClassFound(Term term, LoincLongName loincLongName) {
+    public HpoClassFound(Term term) {
         this.id = term.getId().getValue();
         this.label = term.getName();
         this.definition = term.getDefinition();
-        this.loinc = loincLongName;
-        if (loinc != null) {
-            this.score = calculatePriority();
-        } else {
-            this.score = -999;
-        }
+        this.score = 0;
     }
 
     /**
@@ -61,7 +49,7 @@ public class HpoClassFound implements Comparable<HpoClassFound> {
      * matched.
      * @return score
      */
-    private int calculatePriority() {
+    public int priorityScore() {
         int matchScore = 0;
         String total = this.label;
         if (this.definition != null)
@@ -73,32 +61,6 @@ public class HpoClassFound implements Comparable<HpoClassFound> {
             matchScore += 50;
         }
 
-        //test key matches
-        Queue<String> keysInParameter = this.loinc.keysInLoincParameter();
-        for (String key : keysInParameter) {
-            pattern = Pattern.compile(toPattern(key));
-            matcher = pattern.matcher(total.toLowerCase());
-            if(matcher.matches() && keysInParameter.size() != 0) {
-                matchScore += 30 / keysInParameter.size();
-            }
-        }
-
-        //test tissue matches
-        if (this.loinc.keysInLoincTissue().size() != 0) {
-            String keysInTissue = new Synset().getSynset(new LinkedList<>(this.loinc.keysInLoincTissue())).convertToRe();
-            //String keysInTissue = new Synset().getSynset(new ArrayList<>(this.loinc.keysInLoincTissue())).convertToRe();
-            pattern = Pattern.compile(toPattern(keysInTissue));
-            matcher = pattern.matcher(total.toLowerCase());
-            if (matcher.matches()) {
-                matchScore += 20;
-            }
-        }
-
-        //penalize non-hpo terms
-        String[] id_string = this.id.split("/");
-        if (!id_string[id_string.length - 1].startsWith("HP_")) {
-            matchScore = matchScore / 10;
-        }
         return matchScore;
     }
 
@@ -106,17 +68,7 @@ public class HpoClassFound implements Comparable<HpoClassFound> {
         return ".*(" + key.toLowerCase() + ").*";
     }
 
-    public void setID(String id) {
-        this.id = id;
-    }
 
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    public void setDefinition(String definition) {
-        this.definition = definition;
-    }
 
     public String getId() {
         return this.id;
@@ -130,11 +82,6 @@ public class HpoClassFound implements Comparable<HpoClassFound> {
         return this.definition;
     }
 
-    public LoincLongName getLoinc() {
-        return loinc;
-    }
-
-    public int getScore() { return this.score; }
 
     @Override
     public int compareTo(HpoClassFound other) {
