@@ -27,7 +27,7 @@
         <slf4j.version>1.7.25</slf4j.version>
         <mockito.version>3.3.3</mockito.version>
         <jupiter.version>5.8.1</jupiter.version>
-        <loinc2hpo.version>1.5.8</loinc2hpo.version>
+        <loinc2hpo.version>1.6.0</loinc2hpo.version>
     </properties>
 
     <dependencies>
