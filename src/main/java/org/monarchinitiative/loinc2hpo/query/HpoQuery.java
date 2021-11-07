@@ -10,6 +10,7 @@ import org.monarchinitiative.phenol.ontology.data.TermSynonym;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class HpoQuery {
@@ -26,21 +27,21 @@ public class HpoQuery {
      * @return list of HPO terms with exact match to HPO id or at least partial match with text
      */
     public List<HpoClassFound> query(String query) {
-        query = query.trim();
-        if (query.startsWith("HP:") && query.length() == 10) {
+        query = query.trim().toLowerCase(Locale.ROOT);
+        if (query.startsWith("hp:") && query.length() == 10) {
             TermId tid = TermId.of(query);
             return queryByTermId(tid);
         }
         // if we get here, try a text match
         List<HpoClassFound> hits = new ArrayList<>();
         for (Term term : hpo.getTermMap().values()) {
-            if (term.getName().contains(query)) {
+            if (term.getName().toLowerCase(Locale.ROOT).contains(query)) {
                 hits.add(new HpoClassFound(term));
-            } else if (term.getDefinition().contains(query)) {
+            } else if (term.getDefinition().toLowerCase(Locale.ROOT).contains(query)) {
                 hits.add(new HpoClassFound(term));
             } else {
                 for (TermSynonym syn : term.getSynonyms()) {
-                    if (syn.getValue().contains(query)) {
+                    if (syn.getValue().toLowerCase(Locale.ROOT).contains(query)) {
                         hits.add(new HpoClassFound(term));
                     }
                 }

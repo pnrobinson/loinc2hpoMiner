@@ -83,9 +83,6 @@
                            </GridPane.margin>
                        </Button>
                        <Button fx:id="userSuppliedLoincCodes" mnemonicParsing="false" onAction="#handleLoincFiltering" stylesheets="@../css/loinc2hpo.css" text="Load user-supplied LOINC codes" GridPane.columnIndex="1">
-                           <GridPane.margin>
-                               <Insets left="20.0" />
-                           </GridPane.margin>
                        </Button>
                    </GridPane>
                    <HBox VBox.vgrow="NEVER">
@@ -110,8 +107,9 @@
                                    <MenuItem mnemonicParsing="false" onAction="#getChildHpoTerms" text="get child terms" />
                                    <MenuItem mnemonicParsing="false" onAction="#addQnLowTerm" text="Qn Low" />
                                    <MenuItem mnemonicParsing="false" onAction="#addQnHighTerm" text="Qn High" />
-                                   <MenuItem mnemonicParsing="false" onAction="#addNormalTerm" text="Normal" />
-                                   <MenuItem mnemonicParsing="false" onAction="#addOrdAbnormal" text="Ord Abnormal" />
+                                   <MenuItem mnemonicParsing="false" onAction="#addQnNormalTerm" text="Qn Normal" />
+                                   <MenuItem mnemonicParsing="false" onAction="#addOrdinalPositive" text="Ordinal Positive" />
+                                   <MenuItem mnemonicParsing="false" onAction="#addOrdinalNegative" text="Ordinal Negative" />
                                    <MenuItem mnemonicParsing="false" onAction="#addNominalTerm" text="Nominal" />
                                </items>
                            </ContextMenu>
@@ -156,7 +154,8 @@
                        <Button fx:id="createAnnotationButton" mnemonicParsing="false" onAction="#createQnAnnotation" stylesheets="@../css/loinc2hpo.css" text="Qn" />
                        <Button fx:id="allAnnotationsButton" mnemonicParsing="false" onAction="#createOrdAnnotation" stylesheets="@../css/loinc2hpo.css" text="Ord" />
                        <Button fx:id="nominalAnnotationButton" mnemonicParsing="false" onAction="#createNomAnnotation" stylesheets="@../css/loinc2hpo.css" text="Nom" />
-                       <Button fx:id="clearButton" mnemonicParsing="false" onAction="#handleClear" stylesheets="@../css/loinc2hpo.css" text="Clear">
+                       <Button mnemonicParsing="false" onAction="#saveChangeToAnnotation" stylesheets="@../css/loinc2hpo.css" text="Save changes" />
+                       <Button fx:id="clearButton" mnemonicParsing="false" onAction="#clearCreateAnnotationTable" stylesheets="@../css/loinc2hpo.css" text="Clear">
                            <HBox.margin>
                                <Insets left="40.0" />
                            </HBox.margin>
@@ -221,7 +220,7 @@
                        <SplitPane dividerPositions="0.29910714285714285" orientation="VERTICAL" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1">
                            <VBox fx:id="vbox4wv" alignment="CENTER" />
                            <AnchorPane>
-                               <TableView fx:id="loincAnnotationTableView" AnchorPane.bottomAnchor="40.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="40.0">
+                               <TableView fx:id="loincAnnotationTableView" prefHeight="408.0" prefWidth="1514.0" AnchorPane.bottomAnchor="-70.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="0.0">
                                    <columns>
                                        <TableColumn fx:id="loincNumberColumn" prefWidth="100.0" resizable="false" text="LOINC Num" />
                                        <TableColumn fx:id="loincScaleColumn" prefWidth="70.0" resizable="false" text="Scale" />

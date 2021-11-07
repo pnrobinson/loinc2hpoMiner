@@ -1,10 +1,8 @@
-package org.monarchinitiative.loinc2hpo.model;
+package org.monarchinitiative.loinc2hpo.query;
 
-import org.monarchinitiative.loinc2hpocore.annotation.Loinc2HpoAnnotation;
-import org.monarchinitiative.loinc2hpocore.annotation.LoincAnnotation;
+
 import org.monarchinitiative.loinc2hpocore.loinc.LoincEntry;
 import org.monarchinitiative.loinc2hpocore.loinc.LoincId;
-import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
