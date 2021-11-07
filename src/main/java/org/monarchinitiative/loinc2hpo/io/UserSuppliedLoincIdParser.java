@@ -1,4 +1,4 @@
-package org.monarchinitiative.loinc2hpo.io.loincparser;
+package org.monarchinitiative.loinc2hpo.io;
 
 
 import org.monarchinitiative.loinc2hpo.except.Loinc2HpoRunTimeException;

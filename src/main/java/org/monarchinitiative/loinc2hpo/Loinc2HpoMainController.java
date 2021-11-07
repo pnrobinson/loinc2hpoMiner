@@ -18,17 +18,17 @@ import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import org.monarchinitiative.loinc2hpo.except.Loinc2HpoRunTimeException;
 import org.monarchinitiative.loinc2hpo.guitools.*;
 import org.monarchinitiative.loinc2hpo.io.HpoMenuDownloader;
-import org.monarchinitiative.loinc2hpo.io.loincparser.*;
+import org.monarchinitiative.loinc2hpo.io.UserSuppliedLoincIdParser;
 import org.monarchinitiative.loinc2hpo.model.*;
+import org.monarchinitiative.loinc2hpo.query.HpoQuery;
+import org.monarchinitiative.loinc2hpo.query.LoincQuery;
 import org.monarchinitiative.loinc2hpocore.annotation.*;
 import org.monarchinitiative.loinc2hpocore.codesystems.Outcome;
 import org.monarchinitiative.loinc2hpocore.io.Loinc2HpoAnnotationParser;
 import org.monarchinitiative.loinc2hpocore.loinc.LoincEntry;
 import org.monarchinitiative.loinc2hpocore.loinc.LoincId;
-import org.monarchinitiative.loinc2hpocore.loinc.LoincLongName;
 import org.monarchinitiative.phenol.ontology.algo.OntologyAlgorithm;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.Term;
@@ -66,8 +66,8 @@ public class Loinc2HpoMainController {
     private Map<LoincId, LoincEntry> loincmap = null;
 
     private final ObservableMap<LoincId, Loinc2HpoAnnotation> annotationsMap = FXCollections.observableHashMap();
-
-    private final CurrentAnnotationModel currentAnnotationModel;
+    @Autowired
+    private CurrentAnnotationModel currentAnnotationModel;
 
     @FXML
     public Button nominalAnnotationButton;
@@ -84,7 +84,7 @@ public class Loinc2HpoMainController {
     @FXML
     private Button filterLoincTableByList;
     @FXML
-    private TextField userInputForManualQuery;
+    private TextField hpoByManualInputTextField;
 
     @FXML
     private ListView<HpoClassFound> hpoListView;
@@ -126,9 +126,6 @@ public class Loinc2HpoMainController {
     private Button hpoChildTermsButton;
     @FXML
     private ContextMenu contextMenu;
-
-    @FXML
-    private Button searchHpoByLoincButton;
 
 
     @FXML
@@ -192,7 +189,6 @@ public class Loinc2HpoMainController {
         this.optionalResources = optionalResources;
         this.executor = executorService;
         this.pgProperties = pgProperties;
-        this.currentAnnotationModel = new CurrentAnnotationModel();
     }
 
     @FXML
@@ -213,7 +209,6 @@ public class Loinc2HpoMainController {
         allAnnotationsButton.setTooltip(new Tooltip("Display annotations for currently selected Loinc code"));
         initLOINCtableButton.setTooltip(new Tooltip("Ingest Loinc Core Table and HP (Download the files first)."));
         searchForLOINCIdButton.setTooltip(new Tooltip("Search Loinc with a Loinc code or name"));
-        searchHpoByLoincButton.setTooltip(new Tooltip("Find candidate HPO terms"));
 
         hpoListView.setCellFactory(new Callback<>() {
             @Override
@@ -250,7 +245,7 @@ public class Loinc2HpoMainController {
     private void initializeHpoAnnotationTable() {
         this.hpoAnnotationTable.setEditable(false);
         hpoAnnotationTid.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getHpoTermId().getValue()));
-        hpoAnnotationType.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getLoincType()));
+        hpoAnnotationType.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getOutcome().getOutcome()));
         hpoAnnotationTermLabel.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getHpoTermLabel()));
         hpoAnnotationTid.setSortable(false);
         hpoAnnotationType.setSortable(false);
@@ -294,7 +289,6 @@ public class Loinc2HpoMainController {
     }
 
 
-
     private void initTableStructure() {
         loincIdTableColumn.setSortable(true);
         loincIdTableColumn.setCellValueFactory(cdf ->
@@ -309,7 +303,7 @@ public class Loinc2HpoMainController {
         methodTableColumn.setSortable(true);
         methodTableColumn.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getMethod()));
         scaleTableColumn.setSortable(true);
-        scaleTableColumn.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getScale().toString()));
+        scaleTableColumn.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getScale().shortName()));
         systemTableColumn.setSortable(true);
         systemTableColumn.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getSystem()));
         nameTableColumn.setSortable(true);
@@ -318,11 +312,9 @@ public class Loinc2HpoMainController {
     }
 
 
-
-    private void updateHpoTermListView( List<HpoClassFound> result) {
+    private void updateHpoTermListView(List<HpoClassFound> result) {
         //among found terms, show those that are 1) HPO terms 2) not obsolete
         hpoQueryResult.addAll(result);
-        hpoQueryResult.sort((o1, o2) -> o2.getScore() - o1.getScore());
         LOGGER.trace("hpoQueryResult size: " + hpoQueryResult.size());
         if (hpoQueryResult.size() == 0) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -349,127 +341,22 @@ public class Loinc2HpoMainController {
         hpoListView.setItems(hpoQueryResult);
     }
 
+    /**
+     * Method to search by HPO id or by one or more words -- we are looking for HPO terms.
+     */
     @FXML
     private void searchHpoByString(ActionEvent e) {
         e.consume();
-        LoincEntry entry = loincTableView.getSelectionModel()
-                .getSelectedItem();
-        if (entry == null) {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("No Selection ERROR");
-            alert.setHeaderText("Select a row in Loinc table");
-            alert.setContentText("A loinc code is required for ranking " +
-                    "candidate HPO terms. Select one row in the loinc " +
-                    "table and query again.");
-            alert.showAndWait();
+        String query = this.hpoByManualInputTextField.getText().trim();
+        if (query.isEmpty()) {
+            PopUps.showWarningDialog("Empty query", "Empty HPO query",
+                    "Enter an HPO Id or text to search for HPO terms");
             return;
         }
-        String query = userInputForManualQuery.getText().trim();
-        String name = entry.getLongName();
-        System.err.println("Got name: " + name);
+        HpoQuery hpoQuery = new HpoQuery(optionalResources.getOntology());
+        List<HpoClassFound> foundHpoList = hpoQuery.query(query);
         hpoListView.getItems().clear();
-        LoincVsHpoQuery loincVsHpoQuery = optionalResources.getLoincVsHpoQuery();
-        List<HpoClassFound> foundHpoList = loincVsHpoQuery.queryByLoincLongName(name, entry.getLoincLongName());
         updateHpoTermListView(foundHpoList);
-    }
-
-    /**
-     * The user has selected a row in the LOINC table and searches for HPO terms with matching words.
-     */
-    @FXML
-    private void searchHpoByLoinc(ActionEvent e) {
-        e.consume();
-        LoincEntry entry = loincTableView.getSelectionModel()
-                .getSelectedItem();
-        if (entry == null) {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("No Selection ERROR");
-            alert.setHeaderText("Select a row in Loinc table");
-            alert.setContentText("A loinc code is required for ranking " +
-                    "candidate HPO terms. Select one row in the loinc " +
-                    "table and query again.");
-            alert.showAndWait();
-            return;
-        }
-        LOGGER.info(String.format("Start auto query for \"%s\"by pressing button", entry));
-        String name = entry.getLongName();
-        System.err.println("Got name: " + name);
-        hpoListView.getItems().clear();
-        LoincVsHpoQuery loincVsHpoQuery = optionalResources.getLoincVsHpoQuery();
-        List<HpoClassFound> foundHpoList = loincVsHpoQuery.queryByLoincLongName(name, entry.getLoincLongName());
-        updateHpoTermListView(foundHpoList);
-    }
-
-    @FXML
-    private void handleManualQueryButton(ActionEvent e) {
-        e.consume();
-        LoincEntry entry = loincTableView.getSelectionModel().getSelectedItem();
-        if (entry == null) {
-            noLoincEntryAlert();
-            return;
-        }
-        String userInput = userInputForManualQuery.getText();
-        if (userInput == null || userInput.trim().length() < 2) {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Input Error");
-            alert.setHeaderText("Type in keys for manual query");
-            alert.setContentText("Provide comma seperated keys for query. Do " +
-                    "not use quotes(\"\"). Avoid non-specific words " +
-                    "or numbers. Synonyms are strongly recommended if " +
-                    "auto-query is not working.");
-            alert.showAndWait();
-            return;
-        }
-        String[] keys = userInput.split(",");
-        List<String> keysInList = new ArrayList<>();
-        for (String key : keys) {
-            if (key.length() > 0) {
-                keysInList.add(key);
-            }
-        }
-
-        String name = entry.getLongName();
-        LoincLongName loincLongName =  LoincLongName.of(name);
-        LoincVsHpoQuery loincVsHpoQuery = optionalResources.getLoincVsHpoQuery();
-        List<HpoClassFound> queryResults = loincVsHpoQuery.queryByLoincLongName(keysInList, loincLongName);
-        if (queryResults.size() != 0) {
-            ObservableList<HpoClassFound> items = FXCollections.observableArrayList();
-            items.addAll(queryResults);
-            this.hpoListView.setItems(items);
-            userInputForManualQuery.clear();
-        } else {
-            ObservableList<String> items = FXCollections.observableArrayList();
-            items.add("0 HPO class is found. Try manual search with " +
-                    "alternative keys (synonyms)");
-            Alert alert = new Alert(Alert.AlertType.WARNING);
-            alert.setTitle("Warning");
-            alert.setHeaderText("No HPO Found");
-            alert.setContentText("Try search with synonyms");
-            alert.show();
-            Task<Void> task = new Task<>() {
-                @Override
-                protected Void call() {
-                    try {
-                        Thread.sleep(1500);
-                    } catch (InterruptedException e) {
-                        //do nothing
-                    } finally {
-                        runLater(alert::close);
-                    }
-                    return null;
-                }
-            };
-            Thread alertThread = new Thread(task);
-            alertThread.start();
-        }
-        //clear text in abnormality text fields if not currently editing a term
-        if (!createAnnotationButton.getText().equals("Save")) {
-            //Got user feedback that they do not want to clear the field when doing manual query
-            //clearAbnormalityTextField();
-            //inialize the flag field
-
-            annotationNoteField.setText("");
-        }
     }
 
     @FXML
@@ -499,8 +386,6 @@ public class Loinc2HpoMainController {
     }
 
 
-
-
     /**
      * Search for LOINC entries by LOINC id
      */
@@ -509,19 +394,8 @@ public class Loinc2HpoMainController {
         e.consume();
         String query = this.loincSearchTextField.getText().trim();
         if (query.isEmpty()) return;
-        List<LoincEntry> entrylist = new ArrayList<>();
-        try {
-            LoincId loincId = new LoincId(query);
-            if (this.loincmap.containsKey(loincId)) {
-                entrylist.add(this.loincmap.get(loincId));
-                LOGGER.debug(this.loincmap.get(loincId).getLoincId() + " : " + this.loincmap.get(loincId).getLongName());
-            } else { //correct loinc code form but not valid
-                throw new Exception();
-            }
-        } catch (Exception msg) {
-            PopUps.showException("Error", "Could not search LOINC data", msg);
-            return;
-        }
+        LoincQuery loincQuery = new LoincQuery(optionalResources.getLoincTableMap());
+        List<LoincEntry> entrylist = loincQuery.query(query);
         LOGGER.trace(String.format("Searching table for:  %s", query));
         LOGGER.trace("# of loinc entries found: " + entrylist.size());
         loincTableView.getItems().clear();
@@ -547,8 +421,8 @@ public class Loinc2HpoMainController {
         if (userSuppliedLoincIds.isEmpty()) {
             LOGGER.error("Found 0 Loinc codes");
             PopUps.showWarningDialog("LOINC filtering",
-                        "No hits found",
-                        "Could not find any loinc codes");
+                    "No hits found",
+                    "Could not find any loinc codes");
             return;
         } else {
             LOGGER.trace("# of loinc entries found: " + userSuppliedLoincIds.size());
@@ -565,28 +439,6 @@ public class Loinc2HpoMainController {
         accordion.setExpandedPane(loincTableTitledpane);
     }
 
-
-    @FXML
-    private void handleClear(ActionEvent event) {
-        annotationNoteField.clear();
-        if (clearButton.getText().equals("Cancel")) {
-            clearButton.setText("Clear");
-            //appTempData.setLoincUnderEditing(null);
-        }
-        createAnnotationButton.setText("Create annotation");
-    }
-
-
-    private void noLoincEntryAlert() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("No Selection ERROR");
-        alert.setHeaderText("Select a row in Loinc table");
-        alert.setContentText("A loinc code is required for ranking " +
-                "candidate HPO terms. Select one row in the loinc " +
-                "table and query again.");
-        alert.showAndWait();
-    }
-
     /**
      * This method is called from the context menu of a row in the hpoListView.
      * The prupose of the method is to replace the current contents of the
@@ -597,12 +449,12 @@ public class Loinc2HpoMainController {
         HpoClassFound selectedHpoTerm = this.hpoListView.getSelectionModel().getSelectedItem();
         Ontology hpo = this.optionalResources.getOntology();
         TermId tid = TermId.of(selectedHpoTerm.getId());
-        Set<TermId> descTids = OntologyAlgorithm.getChildTerms(hpo, tid,true);
+        Set<TermId> descTids = OntologyAlgorithm.getChildTerms(hpo, tid, true);
         List<HpoClassFound> foundlist = new ArrayList<>();
         for (TermId t : descTids) {
             if (hpo.containsTerm(t)) {
                 Term term = hpo.getTermMap().get(t);
-                var hpoClass = new HpoClassFound(term.getId().getValue(), term.getName(), term.getDefinition(), null);
+                var hpoClass = new HpoClassFound(term);
                 foundlist.add(hpoClass);
             }
         }
@@ -626,7 +478,7 @@ public class Loinc2HpoMainController {
         for (TermId t : descTids) {
             if (hpo.containsTerm(t)) {
                 Term term = hpo.getTermMap().get(t);
-                var hpoClass = new HpoClassFound(term.getId().getValue(), term.getName(), term.getDefinition(), null);
+                var hpoClass = new HpoClassFound(term);
                 foundlist.add(hpoClass);
             }
         }
@@ -654,7 +506,7 @@ public class Loinc2HpoMainController {
         HpoClassFound selectedHpoTerm = this.hpoListView.getSelectionModel().getSelectedItem();
         Ontology hpo = this.optionalResources.getOntology();
         TermId tid = TermId.of(selectedHpoTerm.getId());
-        if (! hpo.containsTerm(tid)) {
+        if (!hpo.containsTerm(tid)) {
             // should never happen, ,if it does, ,something is dodgy
             PopUps.showWarningDialog("Error", "addQnLowTerm",
                     String.format("Could not find term for %s", tid.getValue()));
@@ -662,62 +514,82 @@ public class Loinc2HpoMainController {
         }
         Term term = hpo.getTermMap().get(tid);
         currentAnnotationModel.setQnLow(term);
-        HpoAnnotationRow row = HpoAnnotationRow.qnLow(tid, term.getName());
+        HpoAnnotationRow row = HpoAnnotationRow.qnLow(term);
         updateHpoAnnotationTable(row);
     }
+
     @FXML
     private void addQnHighTerm(ActionEvent e) {
         e.consume();
         HpoClassFound selectedHpoTerm = this.hpoListView.getSelectionModel().getSelectedItem();
         Ontology hpo = this.optionalResources.getOntology();
         TermId tid = TermId.of(selectedHpoTerm.getId());
-        if (! hpo.containsTerm(tid)) {
+        if (!hpo.containsTerm(tid)) {
             // should never happen, ,if it does, ,something is dodgy
-            PopUps.showWarningDialog("Error", "addQnLowTerm",
+            PopUps.showWarningDialog("Error", "addQnHighTerm",
                     String.format("Could not find term for %s", tid.getValue()));
             return;
         }
         Term term = hpo.getTermMap().get(tid);
-        HpoAnnotationRow row = HpoAnnotationRow.qnHigh(tid, term.getName());
+        HpoAnnotationRow row = HpoAnnotationRow.qnHigh(term);
         currentAnnotationModel.setQnHigh(term);
         updateHpoAnnotationTable(row);
     }
 
     @FXML
-    private void addNormalTerm(ActionEvent e) {
+    private void addQnNormalTerm(ActionEvent e) {
         e.consume();
         HpoClassFound selectedHpoTerm = this.hpoListView.getSelectionModel().getSelectedItem();
         Ontology hpo = this.optionalResources.getOntology();
         TermId tid = TermId.of(selectedHpoTerm.getId());
-        if (! hpo.containsTerm(tid)) {
+        if (!hpo.containsTerm(tid)) {
             // should never happen, ,if it does, ,something is dodgy
-            PopUps.showWarningDialog("Error", "addQnLowTerm",
+            PopUps.showWarningDialog("Error", "addQnNormalTerm",
                     String.format("Could not find term for %s", tid.getValue()));
             return;
         }
         Term term = hpo.getTermMap().get(tid);
-        currentAnnotationModel.setNormal(term);
-        HpoAnnotationRow row = HpoAnnotationRow.normal(tid, term.getName());
+        currentAnnotationModel.setQnNormal(term);
+        HpoAnnotationRow row = HpoAnnotationRow.qnNormal(term);
         updateHpoAnnotationTable(row);
     }
 
     @FXML
-    private void addOrdAbnormal(ActionEvent e) {
+    private void addOrdinalPositive(ActionEvent e) {
         e.consume();
         HpoClassFound selectedHpoTerm = this.hpoListView.getSelectionModel().getSelectedItem();
         Ontology hpo = this.optionalResources.getOntology();
         TermId tid = TermId.of(selectedHpoTerm.getId());
-        if (! hpo.containsTerm(tid)) {
+        if (!hpo.containsTerm(tid)) {
             // should never happen, ,if it does, ,something is dodgy
-            PopUps.showWarningDialog("Error", "addQnLowTerm",
+            PopUps.showWarningDialog("Error", "addOrdinalPositive",
                     String.format("Could not find term for %s", tid.getValue()));
             return;
         }
         Term term = hpo.getTermMap().get(tid);
-        currentAnnotationModel.setOrdAbnormal(term);
-        HpoAnnotationRow row = HpoAnnotationRow.ordAbnormal(tid, term.getName());
+        currentAnnotationModel.setOrdinalPositive(term);
+        HpoAnnotationRow row = HpoAnnotationRow.ordPositive(term);
         updateHpoAnnotationTable(row);
     }
+
+    @FXML
+    private void addOrdinalNegative(ActionEvent e) {
+        e.consume();
+        HpoClassFound selectedHpoTerm = this.hpoListView.getSelectionModel().getSelectedItem();
+        Ontology hpo = this.optionalResources.getOntology();
+        TermId tid = TermId.of(selectedHpoTerm.getId());
+        if (!hpo.containsTerm(tid)) {
+            // should never happen, ,if it does, ,something is dodgy
+            PopUps.showWarningDialog("Error", "addOrdinalNegative",
+                    String.format("Could not find term for %s", tid.getValue()));
+            return;
+        }
+        Term term = hpo.getTermMap().get(tid);
+        currentAnnotationModel.setOrdinalNegative(term);
+        HpoAnnotationRow row = HpoAnnotationRow.ordNegative(term);
+        updateHpoAnnotationTable(row);
+    }
+
 
     @FXML
     private void addNominalTerm(ActionEvent e) {
@@ -725,15 +597,16 @@ public class Loinc2HpoMainController {
         HpoClassFound selectedHpoTerm = this.hpoListView.getSelectionModel().getSelectedItem();
         Ontology hpo = this.optionalResources.getOntology();
         TermId tid = TermId.of(selectedHpoTerm.getId());
-        if (! hpo.containsTerm(tid)) {
+        if (!hpo.containsTerm(tid)) {
             // should never happen, ,if it does, ,something is dodgy
-            PopUps.showWarningDialog("Error", "addQnLowTerm",
+            PopUps.showWarningDialog("Error", "addNominalTerm",
                     String.format("Could not find term for %s", tid.getValue()));
             return;
         }
         Term term = hpo.getTermMap().get(tid);
         currentAnnotationModel.setNominal(term);
-        HpoAnnotationRow row = HpoAnnotationRow.nominal(tid, term.getName());
+        Outcome nominalOutcome = Outcome.nominal("TODO");
+        HpoAnnotationRow row = HpoAnnotationRow.nominal(nominalOutcome, term);
         updateHpoAnnotationTable(row);
     }
 
@@ -744,14 +617,11 @@ public class Loinc2HpoMainController {
     public void deleteCandidateHpoAnnotation(ActionEvent e) {
         e.consume();
         HpoAnnotationRow selectedRow = this.hpoAnnotationTable.getSelectionModel().getSelectedItem();
+        // delete from current annotation model
+        TermId hpoId = selectedRow.getHpoTermId();
+        currentAnnotationModel.deleteSelectedTermId(hpoId);
         this.hpoAnnotationTable.getItems().remove(selectedRow);
-    }
 
-
-    @FXML
-    private void descendantsOfMarkedTerm(ActionEvent e) {
-        System.err.println("[WARNING] suggestNewChildTerm not implemented");
-        e.consume();
     }
 
     /**
@@ -767,7 +637,7 @@ public class Loinc2HpoMainController {
 
     private String biocurationString() {
         String biocurator = optionalResources.getBiocurator();
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDateTime now = LocalDateTime.now();
         return String.format("%s[%s]", biocurator, dtf.format(now));
     }
@@ -784,7 +654,7 @@ public class Loinc2HpoMainController {
         LoincEntry loincEntryForAnnotation = loincTableView.getSelectionModel().getSelectedItem();
         LoincId loincCode = loincEntryForAnnotation.getLoincId();
         LoincScale loincScale = loincEntryForAnnotation.getScale();
-        if (! loincScale.equals(LoincScale.NOMINAL)) {
+        if (!loincScale.equals(LoincScale.NOMINAL)) {
             String errorMsg = String.format("You are trying to annotate with NOM but the mode of %s is %s",
                     loincCode, loincScale.name());
             PopUps.showInfoMessage(errorMsg,
@@ -792,7 +662,7 @@ public class Loinc2HpoMainController {
             return;
         }
         List<Loinc2HpoAnnotation> existingAnnotations = getLoinc2HpoAnnotations(loincCode);
-        if (! existingAnnotations.isEmpty()) {
+        if (!existingAnnotations.isEmpty()) {
             boolean toOverwrite = PopUps.getBooleanFromUser("Do you want to overwrite?",
                     loincCode + " is already annotated", "Overwrite warning");
             if (!toOverwrite) return;
@@ -812,7 +682,7 @@ public class Loinc2HpoMainController {
                 biocuration,
                 comment);
 
-        Term normal = currentAnnotationModel.getNormal();
+        Term normal = currentAnnotationModel.getOrdinalNegative();
         Loinc2HpoAnnotation normalAnnot = new Loinc2HpoAnnotation(loincCode,
                 LoincScale.NOMINAL,
                 Outcome.nominal("TODO"),
@@ -820,7 +690,7 @@ public class Loinc2HpoMainController {
                 biocuration,
                 comment);
         Map<Outcome, Loinc2HpoAnnotation> outcomeMap = new HashMap<>();
-        outcomeMap.put(Outcome.nominal("TODO"),nominalAnnot);
+        outcomeMap.put(Outcome.nominal("TODO"), nominalAnnot);
         outcomeMap.put(Outcome.NORMAL(), normalAnnot);
         LoincAnnotation nominalLoincAnnotation = new NominalLoincAnnotation(outcomeMap);
         System.out.println("TODO NOMINAL ANNOTATION");
@@ -838,7 +708,7 @@ public class Loinc2HpoMainController {
         LoincEntry loincEntryForAnnotation = loincTableView.getSelectionModel().getSelectedItem();
         LoincId loincCode = loincEntryForAnnotation.getLoincId();
         LoincScale loincScale = loincEntryForAnnotation.getScale();
-        if (! loincScale.equals(LoincScale.ORDINAL)) {
+        if (!loincScale.equals(LoincScale.ORDINAL)) {
             String errorMsg = String.format("You are trying to annotate with ORD but the mode of %s is %s",
                     loincCode, loincScale.name());
             PopUps.showInfoMessage(errorMsg,
@@ -852,20 +722,20 @@ public class Loinc2HpoMainController {
         }
 
         String comment = annotationNoteField.getText().trim();
-        Term abn = currentAnnotationModel.getOrdAbnormal();
-        Term normal = currentAnnotationModel.getNormal();
+        Term ordinalPositive = currentAnnotationModel.getOrdinalPositive();
+        Term ordinalNegative = currentAnnotationModel.getOrdinalNegative();
         //map hpo terms to internal codes
         if (!currentAnnotationModel.validOrdAnnotation()) {
             String errorMsg;
-            if (normal == null) {
-                errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"normal\" term was null",
+            if (ordinalNegative == null) {
+                errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"ordinalNegative\" term was null",
                         loincScale.name());
-            } else if (abn == null) {
+            } else if (ordinalPositive == null) {
                 errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"abnormal\" term was null",
                         loincScale.name());
             } else {
-                errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; normal %s, abnormal: %s",
-                        loincScale.name(), normal.getName(), abn.getName());
+                errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; ordinalNegative %s, abnormal: %s",
+                        loincScale.name(), ordinalNegative.getName(), ordinalPositive.getName());
             }
             PopUps.showWarningDialog("Error", "Invalid data",
                     errorMsg);
@@ -873,21 +743,12 @@ public class Loinc2HpoMainController {
         }
 
         String biocuration = biocurationString();
-
-        Loinc2HpoAnnotation abnormalAnnot = new Loinc2HpoAnnotation(loincCode,
-                LoincScale.ORDINAL,
-                Outcome.PRESENT(),
-                abn.getId(),
-                biocuration,
-                comment);
-        Loinc2HpoAnnotation normalAnnot = new Loinc2HpoAnnotation(loincCode,
-                LoincScale.ORDINAL,
-                Outcome.ABSENT(),
-                normal.getId(),
-                biocuration,
-                comment);
-        LoincAnnotation ordinalAnnot = new OrdinalHpoAnnotation(normalAnnot, abnormalAnnot);
-        addAnnotationAndUpdateGui(loincCode, ordinalAnnot);
+        Optional<LoincAnnotation> opt = currentAnnotationModel.ordinal(loincCode, biocuration, comment);
+        if (opt.isEmpty()) {
+            PopUps.showInfoMessage("Error -- unable to create Ord annotation", "Error");
+            return;
+        }
+        addAnnotationAndUpdateGui(loincCode, opt.get());
     }
 
     @FXML
@@ -900,7 +761,7 @@ public class Loinc2HpoMainController {
         LoincEntry loincEntryForAnnotation = loincTableView.getSelectionModel().getSelectedItem();
         LoincId loincCode = loincEntryForAnnotation.getLoincId();
         LoincScale loincScale = loincEntryForAnnotation.getScale();
-        if (! loincScale.equals(LoincScale.QUANTITATIVE)) {
+        if (!loincScale.equals(LoincScale.QUANTITATIVE)) {
             String errorMsg = String.format("You are trying to annotate with Qn but the mode of %s is %s",
                     loincCode, loincScale.name());
             PopUps.showInfoMessage(errorMsg,
@@ -915,54 +776,108 @@ public class Loinc2HpoMainController {
         String comment = annotationNoteField.getText().trim();
         // there are three annotations to add
         Term low = currentAnnotationModel.getQnLow();
-        Term normal = currentAnnotationModel.getNormal();
+        Term normal = currentAnnotationModel.getQnNormal();
         Term high = currentAnnotationModel.getQnHigh();
 
-       if (!currentAnnotationModel.validQnAnnotation()) {
-           String errorMsg;
-           if (normal == null) {
-               errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"normal\" term was null",
-                       loincScale.name());
-           } else if (low == null) {
-               errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"low\" term was null",
-                       loincScale.name());
-           } else if (high == null) {
-               errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"high\" term was null",
-                       loincScale.name());
-           } else {
-               errorMsg = String.format("Invalid Qn annotation. LOINC type: %s; low: %s, normal %s, high: %s",
-                       loincScale.name(), low.getName(), normal.getName(), high.getName());
-           }
-           PopUps.showWarningDialog("Error", "Invalid data",
-                   errorMsg);
-           return;
-       }
+        if (!currentAnnotationModel.validQnAnnotation()) {
+            String errorMsg;
+            if (normal == null) {
+                errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"normal\" term was null",
+                        loincScale.name());
+            } else if (low == null) {
+                errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"low\" term was null",
+                        loincScale.name());
+            } else if (high == null) {
+                errorMsg = String.format("Invalid Ord annotation. LOINC type: %s; \"high\" term was null",
+                        loincScale.name());
+            } else {
+                errorMsg = String.format("Invalid Qn annotation. LOINC type: %s; low: %s, normal %s, high: %s",
+                        loincScale.name(), low.getName(), normal.getName(), high.getName());
+            }
+            PopUps.showWarningDialog("Error", "Invalid data",
+                    errorMsg);
+            return;
+        }
         String biocuration = biocurationString();
-
-        Loinc2HpoAnnotation lowAnnot = new Loinc2HpoAnnotation(loincCode,
-                LoincScale.QUANTITATIVE,
-                Outcome.LOW(),
-                low.getId(),
-                biocuration,
-                comment);
-        Loinc2HpoAnnotation normalAnnot = new Loinc2HpoAnnotation(loincCode,
-                LoincScale.QUANTITATIVE,
-                Outcome.NORMAL(),
-                normal.getId(),
-                biocuration,
-                comment);
-        Loinc2HpoAnnotation highAnnot = new Loinc2HpoAnnotation(loincCode,
-                LoincScale.QUANTITATIVE,
-                Outcome.HIGH(),
-                high.getId(),
-                biocuration,
-                comment);
-
-
-        LoincAnnotation quantAnnot = new QuantitativeLoincAnnotation(lowAnnot, normalAnnot, highAnnot);
+        if (normal == null) {
+            // should never happen
+            PopUps.showInfoMessage("Error -- attempt to create Qn annotation without normal", "Error");
+            return;
+        }
+        Optional<LoincAnnotation> opt = currentAnnotationModel.quantitative(loincCode, biocuration, comment);
+        if (opt.isEmpty()) {
+            PopUps.showInfoMessage("Error -- unable to create Qn annotation", "Error");
+            return;
+        }
+        LoincAnnotation quantAnnot = opt.get();
         addAnnotationAndUpdateGui(loincCode, quantAnnot);
         e.consume();
     }
+
+    @FXML
+    private void saveChangeToAnnotation(ActionEvent e) {
+        if (loincTableView.getSelectionModel().getSelectedItem() == null) {
+            PopUps.showInfoMessage("No loinc entry is selected. Try clicking \"Initialize Loinc Table\"",
+                    "No Loinc selection Error");
+            return;
+        }
+        String biocuration = biocurationString();
+        String comment = annotationNoteField.getText().trim();
+        LoincEntry loincEntryForAnnotation = loincTableView.getSelectionModel().getSelectedItem();
+        LoincId loincCode = loincEntryForAnnotation.getLoincId();
+        LoincScale loincScale = loincEntryForAnnotation.getScale();
+        if (loincScale.equals(LoincScale.QUANTITATIVE)) {
+            Optional<LoincAnnotation> opt = currentAnnotationModel.quantitative(loincCode, biocuration, comment);
+            if (opt.isEmpty()) {
+                PopUps.showInfoMessage("Error -- unable to create Qn annotation", "Error");
+                return;
+            }
+            LoincAnnotation quantAnnot = opt.get();
+            addAnnotationAndUpdateGui(loincCode, quantAnnot);
+        } else if (loincScale.equals(LoincScale.ORDINAL)) {
+            Optional<LoincAnnotation> opt = currentAnnotationModel.ordinal(loincCode, biocuration, comment);
+            if (opt.isEmpty()) {
+                PopUps.showInfoMessage("Error -- unable to create Ord annotation", "Error");
+                return;
+            }
+            addAnnotationAndUpdateGui(loincCode, opt.get());
+        } else if (loincScale.equals(LoincScale.NOMINAL)) {
+            PopUps.showInfoMessage("Nominal update not yet implemented", "WARNING");
+        }
+        ObservableList<HpoAnnotationRow> rows = hpoAnnotationTable.getItems();
+        Ontology hpo = optionalResources.getOntology();
+        currentAnnotationModel.reset();
+        for (var r : rows) {
+            Outcome outcome = r.getOutcome();
+            TermId tid = r.getHpoTermId();
+            if (! hpo.containsTerm(tid)) { // should never happen
+                String msg = String.format("Could not find term for %s", tid.getValue());
+                PopUps.showInfoMessage(msg, "Error");
+            } else {
+                Term term = hpo.getTermMap().get(tid);
+                switch (outcome.getCode()) {
+                    case H -> currentAnnotationModel.setQnHigh(term);
+                    case N -> currentAnnotationModel.setQnNormal(term);
+                    case L -> currentAnnotationModel.setQnLow(term);
+                    case POS -> currentAnnotationModel.setOrdPositive(term);
+                    case NEG -> currentAnnotationModel.setOrdNegative(term);
+                    case NOM -> currentAnnotationModel.setNominal(term);
+                }
+            }
+        }
+        e.consume();
+    }
+
+
+    @FXML
+    private void clearCreateAnnotationTable(ActionEvent e) {
+        runLater( () -> {
+            annotationNoteField.clear();
+            hpoAnnotationTable.getItems().clear();
+        });
+        e.consume();
+    }
+
 
     private void addAnnotationAndUpdateGui(LoincId loincCode, LoincAnnotation annotation) {
         optionalResources.getLoincAnnotations().put(loincCode, annotation);
@@ -970,7 +885,7 @@ public class Loinc2HpoMainController {
                 new LoincAnnotationCreatedViewFactory(optionalResources.getOntology(), annotation);
         boolean confirmed = factory.openDialogWithBoolean();
         LOGGER.trace("Confirmed annotation for " + annotation);
-        if (! confirmed) {
+        if (!confirmed) {
             PopUps.showInfoMessage("Canceling new annotation", "warning");
             return;
         }
@@ -1101,7 +1016,7 @@ public class Loinc2HpoMainController {
      */
     @FXML
     private void openSettingsDialog() {
-        SettingsViewFactory  factory= new SettingsViewFactory(settings);
+        SettingsViewFactory factory = new SettingsViewFactory(settings);
         factory.openDialog();
     }
 
@@ -1132,10 +1047,11 @@ public class Loinc2HpoMainController {
                     annotationTSVSingleFile);
         } catch (IOException ioe) {
             PopUps.showWarningDialog("Error message",
-                    "Failure to Save Session Data" ,
+                    "Failure to Save Session Data",
                     String.format("An error occurred when trying to save data to %s. Try again!", annotationTSVSingleFile));
             return;
         }
+        PopUps.showInfoMessage("", "Successfully saved annotation data");
         e.consume();
     }
 
@@ -1159,25 +1075,26 @@ public class Loinc2HpoMainController {
                             "Confirmation");
             if (choice.isPresent() && choice.get().equals("Yes")) {
                 saveBeforeExit();
-                javafx.application.Platform.exit();
-                System.exit(0);
-            } else if (choice.isPresent() && choice.get().equals("No")) {
-                javafx.application.Platform.exit();
-                System.exit(0);
             }
-        } else {
-            javafx.application.Platform.exit();
-            System.exit(0);
         }
+        javafx.application.Platform.exit();
+        System.exit(0);
     }
 
     // Annotation table
     private String getAnnotationSummaryHTML() {
+        int n_annotatedLoincs = 0;
+        if (optionalResources.getLoincAnnotations().isEmpty()) {
+            PopUps.showInfoMessage("No LOINC annotations found",
+                    "Have you initialized the settings?");
+        } else {
+            n_annotatedLoincs = optionalResources.getLoincAnnotations().size();
+        }
         return "<html><body>\n" +
                 inlineCSS() +
-                "<ul><li>Number of HPO Terms " + optionalResources.getOntology().countNonObsoleteTerms() +"</li>" +
-                "<li>Number of annotated LOINC codes: " + optionalResources.getLoincAnnotations().size() + "</li></ol>"
-         + "</body></html>";
+                "<ul><li>Number of HPO Terms " + optionalResources.getOntology().countNonObsoleteTerms() + "</li>" +
+                "<li>Number of annotated LOINC codes: " + n_annotatedLoincs + "</li></ol>"
+                + "</body></html>";
     }
 
     public void updateAnnotationSummaryWebview() {
@@ -1189,8 +1106,6 @@ public class Loinc2HpoMainController {
             this.vbox4wv.getChildren().addAll(wview);
         });
     }
-
-
 
 
     private static String inlineCSS() {
@@ -1269,69 +1184,62 @@ public class Loinc2HpoMainController {
         event.consume();
     }
 
-    protected void exportAnnotationsAsTSV() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Specify file name");
-        chooser.setInitialDirectory(new File(System.getProperty("user.home")));
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("TSV files (*.txt)", "*.tsv"));
-        File f = chooser.showSaveDialog(null);
-        boolean overwrite = false;
-        String path;
-        if (f != null) {
-            path = f.getAbsolutePath();
-            if (f.exists()) { //check if user wants to overwrite the existing file
-                overwrite = PopUps.getBooleanFromUser("Overwrite?",
-                        "File will be overwritten", null);
-            }
-
-            if (!f.exists() || overwrite) {/*  TODO
-                try {
-                   // Loinc2HpoAnnotation.to_csv_file(optionalResources.getLoincAnnotationMap(), path);
-                } catch (IOException e1) {
-                    String errorMsg = String.format("An error occurred when trying to save data to %s. Try again!", path);
-                    PopUps.showWarningDialog("Error message",
-                            "Failure to Save Session Data" ,errorMsg);
-                    LOGGER.error(errorMsg);
-                }
-                */
-            }
-        }
-    }
-
+    /**
+     * If the user clicks on a LOINC entry in the table in the bottom half of the GUI, then by right
+     * click they can activate "edit annotation." This will open the existing data into the upper windows if
+     * available or open an error window that there is not existing annotation.
+     */
     public void editExistingLoincAnnotation(ActionEvent e) {
         e.consume();
         LoincEntry selectedEntry = this.loincTableView.getSelectionModel().getSelectedItem();
         LoincId loincId = selectedEntry.getLoincId();
-        if (! this.annotationsMap.containsKey(loincId)) {
+        Map<LoincId, LoincAnnotation> existingLoincAnnotMap = optionalResources.getLoincAnnotations();
+        if (!existingLoincAnnotMap.containsKey(loincId)) {
             String msg = String.format("The LOINC entry %s has not been annotated yet. " +
                     "Create a new annotation by right clicking on HPO terms", loincId.toString());
             PopUps.showInfoMessage(msg, "Warning");
             return;
         }
         // if we get here, we have an existing annotation that the user wants to edit
-        Loinc2HpoAnnotation annot = this.annotationsMap.get(loincId);
-        Outcome outcome = annot.getOutcome();
-        // clear annotation table if required
-        hpoAnnotationTable.getItems().clear();
-        TermId hpoTermId = annot.getHpoTermId();
-        Optional<String> opt = optionalResources.getOntology().getTermLabel(hpoTermId);
-        String label = opt.orElse("n/a");
+        LoincAnnotation annot = existingLoincAnnotMap.get(loincId);
+        List<Loinc2HpoAnnotation> allAnnots =  annot.allAnnotations();
         List<HpoAnnotationRow> rows = new ArrayList<>();
-        HpoAnnotationRow row = switch (outcome.getCode()) {
-            case H -> HpoAnnotationRow.qnHigh(hpoTermId, label);
-            case L -> HpoAnnotationRow.qnLow(hpoTermId, label);
-            case N -> HpoAnnotationRow.normal(hpoTermId, label);
-            case A -> HpoAnnotationRow.ordAbnormal(hpoTermId, label);
-            case NOM -> HpoAnnotationRow.nominal(hpoTermId, label);
-            default ->
-                    // should never ever happen
-                    throw new Loinc2HpoRunTimeException("Did not recognize label: " + outcome.getCode());
-        };
-        rows.add(row);
+        List<HpoClassFound> foundHpos = new ArrayList<>();
+        // The following is UGLY and needs refactoring. TODO
+        for (var ann : allAnnots) {
+            Optional<HpoAnnotationRow> optrow = HpoAnnotationRow.fromLoinc2HpoAnnotation(ann, optionalResources.getOntology());
+            optrow.ifPresent(rows::add);
+            Optional<HpoClassFound> foundOpt = HpoClassFound.fromLoinc2HpoAnnotation(ann, optionalResources.getOntology());
+            foundOpt.ifPresent(foundHpos::add);
+        }
         ObservableList<HpoAnnotationRow> result = FXCollections.observableArrayList(rows);
+        // update the current model
+        Ontology hpo = optionalResources.getOntology();
+        currentAnnotationModel.reset();
+        for (var r : rows) {
+            Outcome outcome = r.getOutcome();
+            TermId tid = r.getHpoTermId();
+            if (! hpo.containsTerm(tid)) { // should never happen
+                String msg = String.format("Could not find term for %s", tid.getValue());
+                PopUps.showInfoMessage(msg, "Error");
+            } else {
+                Term term = hpo.getTermMap().get(tid);
+                switch (outcome.getCode()) {
+                    case H -> currentAnnotationModel.setQnHigh(term);
+                    case N -> currentAnnotationModel.setQnNormal(term);
+                    case L -> currentAnnotationModel.setQnLow(term);
+                    case POS -> currentAnnotationModel.setOrdPositive(term);
+                    case NEG -> currentAnnotationModel.setOrdNegative(term);
+                    case NOM -> currentAnnotationModel.setNominal(term);
+                }
+            }
+        }
         runLater(() -> {
             hpoAnnotationTable.getItems().clear();
             hpoAnnotationTable.setItems(result);
+            // now up date the HPO table on the upper left -- add the terms back in
+            this.hpoListView.getItems().clear();
+            this.hpoListView.getItems().addAll(foundHpos);
         });
     }
 }

@@ -6,7 +6,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import org.monarchinitiative.loinc2hpo.except.Loinc2HpoRunTimeException;
-import org.monarchinitiative.loinc2hpo.io.loincparser.LoincVsHpoQuery;
 import org.monarchinitiative.loinc2hpo.model.Settings;
 import org.monarchinitiative.loinc2hpocore.annotation.Loinc2HpoAnnotation;
 import org.monarchinitiative.loinc2hpocore.annotation.LoincAnnotation;
@@ -76,13 +75,17 @@ public class OptionalResources {
      * @return Map of curated LOINC2HPO annotations
      */
     public Map<LoincId, LoincAnnotation> getLoincAnnotations()   {
+        if (annotationFileProperty() == null) {
+            return Map.of();
+        }
+        String annotationFilePath = annotationFileProperty().get();
+        LOGGER.info("Loading user-supplied annotations from {}", annotationFilePath);
+        if (annotationFilePath == null) {
+            return Map.of();
+        }
         if (loincAnnotationMap == null) {
-            if (annotationFileProperty() == null) {
-                return Map.of();
-            }
             try {
-                String path = annotationFileProperty().get();
-                Loinc2HpoAnnotationParser parser = new Loinc2HpoAnnotationParser(path);
+                Loinc2HpoAnnotationParser parser = new Loinc2HpoAnnotationParser(annotationFilePath);
                 this.loincAnnotationMap = parser.loincToHpoAnnotationMap();
             }catch (Loinc2HpoRunTimeException  e) {
                 e.printStackTrace();
@@ -174,18 +177,5 @@ public class OptionalResources {
         setAnnotationFile(settings.getAnnotationFile());
         setHpoJsonPath(settings.getHpoJsonPath());
     }
-
-
-    private LoincVsHpoQuery loincVsHpoQuery = null;
-
-    public LoincVsHpoQuery getLoincVsHpoQuery(){
-        if (loincVsHpoQuery == null) {
-            loincVsHpoQuery = new LoincVsHpoQuery(ontologyProperty().get());
-        }
-        return this.loincVsHpoQuery;
-    }
-
-
-
 
 }
