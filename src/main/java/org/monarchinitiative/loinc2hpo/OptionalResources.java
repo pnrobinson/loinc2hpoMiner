@@ -84,7 +84,6 @@ public class OptionalResources {
             return Map.of();
         }
         if (loincAnnotationMap == null) {
-
             try {
                 Loinc2HpoAnnotationParser parser = new Loinc2HpoAnnotationParser(annotationFilePath);
                 this.loincAnnotationMap = parser.loincToHpoAnnotationMap();

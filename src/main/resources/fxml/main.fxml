@@ -60,29 +60,26 @@
                <VBox>
                    <GridPane>
                        <columnConstraints>
-                           <ColumnConstraints hgrow="SOMETIMES" maxWidth="465.0" minWidth="10.0" prefWidth="302.0"/>
-                           <ColumnConstraints hgrow="SOMETIMES" maxWidth="639.0" minWidth="10.0" prefWidth="639.0"/>
+                           <ColumnConstraints hgrow="SOMETIMES" maxWidth="465.0" minWidth="10.0" prefWidth="302.0" />
+                           <ColumnConstraints hgrow="SOMETIMES" maxWidth="639.0" minWidth="10.0" prefWidth="639.0" />
                        </columnConstraints>
                        <rowConstraints>
-                           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                        </rowConstraints>
-                       <Button mnemonicParsing="false" onAction="#searchHpoByString" stylesheets="@../css/loinc2hpo.css"
-                               text="Search HPO">
+                       <Button mnemonicParsing="false" onAction="#searchHpoByString" stylesheets="@../css/loinc2hpo.css" text="Search HPO">
                            <GridPane.margin>
-                               <Insets left="20.0"/>
+                               <Insets left="20.0" />
                            </GridPane.margin>
                        </Button>
-                       <TextField fx:id="userInputForManualQuery" onAction="#handleManualQueryButton" prefHeight="24.0"
-                                  prefWidth="733.0" promptText="comma seperated keys" GridPane.columnIndex="1">
+                       <TextField fx:id="hpoByManualInputTextField" prefHeight="24.0" prefWidth="733.0" promptText="comma seperated keys" GridPane.columnIndex="1">
                            <padding>
-                               <Insets left="10.0" right="10.0"/>
+                               <Insets left="10.0" right="10.0" />
                            </padding>
                        </TextField>
-                       <Button fx:id="searchHpoByLoincButton" mnemonicParsing="false" onAction="#searchHpoByLoinc"
-                               stylesheets="@../css/loinc2hpo.css" text="Search HPO by LOINC" GridPane.rowIndex="1">
+                       <Button fx:id="searchHpoByLoincButton" mnemonicParsing="false" onAction="#searchHpoByLoinc" stylesheets="@../css/loinc2hpo.css" text="Search HPO by LOINC" GridPane.rowIndex="1">
                            <GridPane.margin>
-                               <Insets left="20.0"/>
+                               <Insets left="20.0" />
                            </GridPane.margin>
                        </Button>
                    </GridPane>
@@ -146,36 +143,31 @@
                    </ListView>
                    <GridPane>
                        <columnConstraints>
-                           <ColumnConstraints hgrow="SOMETIMES" maxWidth="454.0" minWidth="10.0" prefWidth="274.0"/>
-                           <ColumnConstraints hgrow="SOMETIMES" maxWidth="751.0" minWidth="10.0" prefWidth="660.0"/>
+                           <ColumnConstraints hgrow="SOMETIMES" maxWidth="454.0" minWidth="10.0" prefWidth="274.0" />
+                           <ColumnConstraints hgrow="SOMETIMES" maxWidth="751.0" minWidth="10.0" prefWidth="660.0" />
                        </columnConstraints>
                        <rowConstraints>
-                           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
-                           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+                           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                        </rowConstraints>
-                       <Button fx:id="initLOINCtableButton" mnemonicParsing="false" onAction="#initLOINCtable"
-                               stylesheets="@../css/loinc2hpo.css" text="Inititialize">
+                       <Button fx:id="initLOINCtableButton" mnemonicParsing="false" onAction="#initLOINCtable" stylesheets="@../css/loinc2hpo.css" text="Inititialize">
                            <GridPane.margin>
-                               <Insets left="20.0"/>
+                               <Insets left="20.0" />
                            </GridPane.margin>
                        </Button>
-                       <Button fx:id="userSuppliedLoincCodes" mnemonicParsing="false" onAction="#handleLoincFiltering"
-                               stylesheets="@../css/loinc2hpo.css" text="Load user-supplied LOINC codes"
-                               GridPane.columnIndex="1">
+                       <Button fx:id="userSuppliedLoincCodes" mnemonicParsing="false" onAction="#handleLoincFiltering" stylesheets="@../css/loinc2hpo.css" text="Load user-supplied LOINC codes" GridPane.columnIndex="1">
                            <GridPane.margin>
-                               <Insets left="20.0"/>
+                               <Insets left="20.0" />
                            </GridPane.margin>
                        </Button>
-                       <Button fx:id="searchForLOINCIdButton" mnemonicParsing="false" onAction="#searchByLoincId"
-                               stylesheets="@../css/loinc2hpo.css" text="Search LOINC id/name" GridPane.rowIndex="1">
+                       <Button fx:id="searchForLOINCIdButton" mnemonicParsing="false" onAction="#searchByLoincId" stylesheets="@../css/loinc2hpo.css" text="Search LOINC id/name" GridPane.rowIndex="1">
                            <GridPane.margin>
-                               <Insets left="20.0"/>
+                               <Insets left="20.0" />
                            </GridPane.margin>
                        </Button>
-                       <TextField fx:id="loincSearchTextField" GridPane.columnIndex="1"
-                                  GridPane.rowIndex="1">
+                       <TextField fx:id="loincSearchTextField" GridPane.columnIndex="1" GridPane.rowIndex="1">
                            <GridPane.margin>
-                               <Insets left="20.0" right="20.0"/>
+                               <Insets left="20.0" right="20.0" />
                            </GridPane.margin>
                        </TextField>
                    </GridPane>
@@ -187,7 +179,7 @@
                </VBox>
                <VBox>
                    <HBox prefHeight="100.0" prefWidth="200.0">
-                       <Label stylesheets="@../css/loinc2hpo.css" text="Create LOINC2HPO Annotation"/>
+                       <Label stylesheets="@../css/loinc2hpo.css" text="Create LOINC2HPO Annotation" />
                    </HBox>
                    <HBox spacing="20.0">
                        <VBox.margin>

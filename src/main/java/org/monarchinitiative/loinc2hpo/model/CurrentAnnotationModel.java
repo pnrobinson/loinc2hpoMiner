@@ -32,8 +32,13 @@ public class CurrentAnnotationModel {
         nominal = null;
     }
 
+    /**
+     * For Qn, the only required annotation is normal, i.e., low and high can be missing. In any case it is
+     * not correct to have any ordinal or nominal annotation.
+     * @return True if the annotations are valid.
+     */
     public boolean validQnAnnotation() {
-        return qnLow != null && normal != null && qnHigh != null && ordAbnormal == null && nominal == null;
+        return normal != null && ordAbnormal == null && nominal == null;
     }
 
     public boolean validOrdAnnotation(){
