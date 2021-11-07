@@ -1,6 +1,8 @@
 package org.monarchinitiative.loinc2hpo.query;
 
 import org.monarchinitiative.loinc2hpo.model.HpoClassFound;
+import org.monarchinitiative.loinc2hpocore.annotation.Loinc2HpoAnnotation;
+import org.monarchinitiative.loinc2hpocore.annotation.LoincAnnotation;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.Term;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -8,7 +10,7 @@ import org.monarchinitiative.phenol.ontology.data.TermSynonym;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+import java.util.stream.Collectors;
 
 public class HpoQuery {
 
@@ -55,6 +57,25 @@ public class HpoQuery {
             }
         }
         return List.of();
+    }
+
+    /**
+     * This function is called when the user wants to edit an existing term. By right click,
+     * we get a {@link LoincAnnotation} object, and here we translate that into {@link HpoClassFound}
+     * objects for display.
+     * @param annot annotation to be edited
+     * @return Corresponding {@link HpoClassFound} objects.
+     */
+    public List<HpoClassFound> getHposFromAnnotations(LoincAnnotation annot) {
+        List<HpoClassFound> hpos = new ArrayList<>();
+        List<Loinc2HpoAnnotation> allAnnots =  annot.allAnnotations();
+        List<TermId> termIds = allAnnots.stream().map(Loinc2HpoAnnotation::getHpoTermId).collect(Collectors.toList());
+        for (var tid : termIds) {
+            if (this.hpo.getTermMap().containsKey(tid)) {
+                hpos.add(new HpoClassFound(this.hpo.getTermMap().get(tid)));
+            }
+        }
+        return hpos;
     }
 
 

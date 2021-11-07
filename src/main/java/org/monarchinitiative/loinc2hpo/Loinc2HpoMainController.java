@@ -29,7 +29,6 @@ import org.monarchinitiative.loinc2hpocore.codesystems.Outcome;
 import org.monarchinitiative.loinc2hpocore.io.Loinc2HpoAnnotationParser;
 import org.monarchinitiative.loinc2hpocore.loinc.LoincEntry;
 import org.monarchinitiative.loinc2hpocore.loinc.LoincId;
-import org.monarchinitiative.loinc2hpocore.loinc.LoincLongName;
 import org.monarchinitiative.phenol.ontology.algo.OntologyAlgorithm;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.Term;
@@ -128,9 +127,6 @@ public class Loinc2HpoMainController {
     @FXML
     private ContextMenu contextMenu;
 
-    @FXML
-    private Button searchHpoByLoincButton;
-
 
     @FXML
     private ContextMenu loincTableContextMenu;
@@ -214,7 +210,6 @@ public class Loinc2HpoMainController {
         allAnnotationsButton.setTooltip(new Tooltip("Display annotations for currently selected Loinc code"));
         initLOINCtableButton.setTooltip(new Tooltip("Ingest Loinc Core Table and HP (Download the files first)."));
         searchForLOINCIdButton.setTooltip(new Tooltip("Search Loinc with a Loinc code or name"));
-        searchHpoByLoincButton.setTooltip(new Tooltip("Find candidate HPO terms"));
 
         hpoListView.setCellFactory(new Callback<>() {
             @Override
@@ -251,7 +246,7 @@ public class Loinc2HpoMainController {
     private void initializeHpoAnnotationTable() {
         this.hpoAnnotationTable.setEditable(false);
         hpoAnnotationTid.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getHpoTermId().getValue()));
-        hpoAnnotationType.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getLoincType()));
+        hpoAnnotationType.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getOutcome().getOutcome()));
         hpoAnnotationTermLabel.setCellValueFactory(cdf -> new ReadOnlyStringWrapper(cdf.getValue().getHpoTermLabel()));
         hpoAnnotationTid.setSortable(false);
         hpoAnnotationType.setSortable(false);
@@ -321,7 +316,6 @@ public class Loinc2HpoMainController {
     private void updateHpoTermListView(List<HpoClassFound> result) {
         //among found terms, show those that are 1) HPO terms 2) not obsolete
         hpoQueryResult.addAll(result);
-        hpoQueryResult.sort((o1, o2) -> o2.priorityScore() - o1.priorityScore());
         LOGGER.trace("hpoQueryResult size: " + hpoQueryResult.size());
         if (hpoQueryResult.size() == 0) {
             Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -363,33 +357,6 @@ public class Loinc2HpoMainController {
         HpoQuery hpoQuery = new HpoQuery(optionalResources.getOntology());
         List<HpoClassFound> foundHpoList = hpoQuery.query(query);
         hpoListView.getItems().clear();
-        updateHpoTermListView(foundHpoList);
-    }
-
-    /**
-     * The user has selected a row in the LOINC table and searches for HPO terms with matching words.
-     */
-    @FXML
-    private void searchHpoByLoinc(ActionEvent e) {
-        e.consume();
-        LoincEntry entry = loincTableView.getSelectionModel()
-                .getSelectedItem();
-        if (entry == null) {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("No Selection ERROR");
-            alert.setHeaderText("Select a row in Loinc table");
-            alert.setContentText("A loinc code is required for ranking " +
-                    "candidate HPO terms. Select one row in the loinc " +
-                    "table and query again.");
-            alert.showAndWait();
-            return;
-        }
-        LOGGER.info(String.format("Start auto query for \"%s\"by pressing button", entry));
-        String name = entry.getLongName();
-        System.err.println("Got name: " + name);
-        hpoListView.getItems().clear();
-        LoincVsHpoQuery loincVsHpoQuery = optionalResources.getLoincVsHpoQuery();
-        List<HpoClassFound> foundHpoList = loincVsHpoQuery.queryByString(name);
         updateHpoTermListView(foundHpoList);
     }
 
@@ -510,7 +477,7 @@ public class Loinc2HpoMainController {
         for (TermId t : descTids) {
             if (hpo.containsTerm(t)) {
                 Term term = hpo.getTermMap().get(t);
-                var hpoClass = new HpoClassFound(term.getId().getValue(), term.getName(), term.getDefinition());
+                var hpoClass = new HpoClassFound(term);
                 foundlist.add(hpoClass);
             }
         }
@@ -534,7 +501,7 @@ public class Loinc2HpoMainController {
         for (TermId t : descTids) {
             if (hpo.containsTerm(t)) {
                 Term term = hpo.getTermMap().get(t);
-                var hpoClass = new HpoClassFound(term.getId().getValue(), term.getName(), term.getDefinition());
+                var hpoClass = new HpoClassFound(term);
                 foundlist.add(hpoClass);
             }
         }
@@ -570,7 +537,7 @@ public class Loinc2HpoMainController {
         }
         Term term = hpo.getTermMap().get(tid);
         currentAnnotationModel.setQnLow(term);
-        HpoAnnotationRow row = HpoAnnotationRow.qnLow(tid, term.getName());
+        HpoAnnotationRow row = HpoAnnotationRow.qnLow(term);
         updateHpoAnnotationTable(row);
     }
 
@@ -587,7 +554,7 @@ public class Loinc2HpoMainController {
             return;
         }
         Term term = hpo.getTermMap().get(tid);
-        HpoAnnotationRow row = HpoAnnotationRow.qnHigh(tid, term.getName());
+        HpoAnnotationRow row = HpoAnnotationRow.qnHigh(term);
         currentAnnotationModel.setQnHigh(term);
         updateHpoAnnotationTable(row);
     }
@@ -606,7 +573,7 @@ public class Loinc2HpoMainController {
         }
         Term term = hpo.getTermMap().get(tid);
         currentAnnotationModel.setNormal(term);
-        HpoAnnotationRow row = HpoAnnotationRow.normal(tid, term.getName());
+        HpoAnnotationRow row = HpoAnnotationRow.qnNormal(term);
         updateHpoAnnotationTable(row);
     }
 
@@ -624,7 +591,7 @@ public class Loinc2HpoMainController {
         }
         Term term = hpo.getTermMap().get(tid);
         currentAnnotationModel.setOrdAbnormal(term);
-        HpoAnnotationRow row = HpoAnnotationRow.ordAbnormal(tid, term.getName());
+        HpoAnnotationRow row = HpoAnnotationRow.ordPositive(term);
         updateHpoAnnotationTable(row);
     }
 
@@ -642,7 +609,8 @@ public class Loinc2HpoMainController {
         }
         Term term = hpo.getTermMap().get(tid);
         currentAnnotationModel.setNominal(term);
-        HpoAnnotationRow row = HpoAnnotationRow.nominal(tid, term.getName());
+        Outcome nominalOutcome = Outcome.nominal("TODO");
+        HpoAnnotationRow row = HpoAnnotationRow.nominal(nominalOutcome, term);
         updateHpoAnnotationTable(row);
     }
 
@@ -676,7 +644,7 @@ public class Loinc2HpoMainController {
 
     private String biocurationString() {
         String biocurator = optionalResources.getBiocurator();
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDateTime now = LocalDateTime.now();
         return String.format("%s[%s]", biocurator, dtf.format(now));
     }
@@ -785,13 +753,13 @@ public class Loinc2HpoMainController {
 
         Loinc2HpoAnnotation abnormalAnnot = new Loinc2HpoAnnotation(loincCode,
                 LoincScale.ORDINAL,
-                Outcome.PRESENT(),
+                Outcome.POSITIVE(),
                 abn.getId(),
                 biocuration,
                 comment);
         Loinc2HpoAnnotation normalAnnot = new Loinc2HpoAnnotation(loincCode,
                 LoincScale.ORDINAL,
-                Outcome.ABSENT(),
+                Outcome.NEGATIVE(),
                 normal.getId(),
                 biocuration,
                 comment);
@@ -1081,16 +1049,10 @@ public class Loinc2HpoMainController {
                             "Confirmation");
             if (choice.isPresent() && choice.get().equals("Yes")) {
                 saveBeforeExit();
-                javafx.application.Platform.exit();
-                System.exit(0);
-            } else if (choice.isPresent() && choice.get().equals("No")) {
-                javafx.application.Platform.exit();
-                System.exit(0);
             }
-        } else {
-            javafx.application.Platform.exit();
-            System.exit(0);
         }
+        javafx.application.Platform.exit();
+        System.exit(0);
     }
 
     // Annotation table
@@ -1196,41 +1158,41 @@ public class Loinc2HpoMainController {
         event.consume();
     }
 
-
+    /**
+     * If the user clicks on a LOINC entry in the table in the bottom half of the GUI, then by right
+     * click they can activate "edit annotation." This will open the existing data into the upper windows if
+     * available or open an error window that there is not existing annotation.
+     */
     public void editExistingLoincAnnotation(ActionEvent e) {
         e.consume();
         LoincEntry selectedEntry = this.loincTableView.getSelectionModel().getSelectedItem();
         LoincId loincId = selectedEntry.getLoincId();
-        if (!this.annotationsMap.containsKey(loincId)) {
+        Map<LoincId, LoincAnnotation> existingLoincAnnotMap = optionalResources.getLoincAnnotations();
+        if (!existingLoincAnnotMap.containsKey(loincId)) {
             String msg = String.format("The LOINC entry %s has not been annotated yet. " +
                     "Create a new annotation by right clicking on HPO terms", loincId.toString());
             PopUps.showInfoMessage(msg, "Warning");
             return;
         }
         // if we get here, we have an existing annotation that the user wants to edit
-        Loinc2HpoAnnotation annot = this.annotationsMap.get(loincId);
-        Outcome outcome = annot.getOutcome();
-        // clear annotation table if required
-        hpoAnnotationTable.getItems().clear();
-        TermId hpoTermId = annot.getHpoTermId();
-        Optional<String> opt = optionalResources.getOntology().getTermLabel(hpoTermId);
-        String label = opt.orElse("n/a");
+        LoincAnnotation annot = existingLoincAnnotMap.get(loincId);
+        List<Loinc2HpoAnnotation> allAnnots =  annot.allAnnotations();
         List<HpoAnnotationRow> rows = new ArrayList<>();
-        HpoAnnotationRow row = switch (outcome.getCode()) {
-            case H -> HpoAnnotationRow.qnHigh(hpoTermId, label);
-            case L -> HpoAnnotationRow.qnLow(hpoTermId, label);
-            case N -> HpoAnnotationRow.normal(hpoTermId, label);
-            case A -> HpoAnnotationRow.ordAbnormal(hpoTermId, label);
-            case NOM -> HpoAnnotationRow.nominal(hpoTermId, label);
-            default ->
-                    // should never ever happen
-                    throw new Loinc2HpoRunTimeException("Did not recognize label: " + outcome.getCode());
-        };
-        rows.add(row);
+        List<HpoClassFound> foundHpos = new ArrayList<>();
+        // The following is UGLY and needs refactoring. TODO
+        for (var ann : allAnnots) {
+            Optional<HpoAnnotationRow> optrow = HpoAnnotationRow.fromLoinc2HpoAnnotation(ann, optionalResources.getOntology());
+            optrow.ifPresent(rows::add);
+            Optional<HpoClassFound> foundOpt = HpoClassFound.fromLoinc2HpoAnnotation(ann, optionalResources.getOntology());
+            foundOpt.ifPresent(foundHpos::add);
+        }
         ObservableList<HpoAnnotationRow> result = FXCollections.observableArrayList(rows);
         runLater(() -> {
             hpoAnnotationTable.getItems().clear();
             hpoAnnotationTable.setItems(result);
+            // now up date the HPO table on the upper left -- add the terms back in
+            this.hpoListView.getItems().clear();
+            this.hpoListView.getItems().addAll(foundHpos);
         });
     }
 }
