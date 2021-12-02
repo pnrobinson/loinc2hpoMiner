@@ -44,7 +44,7 @@ public class HpoAnnotationRow {
     }
 
     /**
-     * @return
+     * @return row for a nominal annotation
      */
     public static HpoAnnotationRow nominal(Outcome nominalOutcome, Term term) {
         return new HpoAnnotationRow(nominalOutcome, term);

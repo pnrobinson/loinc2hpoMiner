@@ -35,7 +35,7 @@
                    <MenuItem mnemonicParsing="false" onAction="#close" text="Exit" />
                </Menu>
                <Menu mnemonicParsing="false" text="Configuration">
-                   <MenuItem mnemonicParsing="false" onAction="#setPathToLoincCoreTableFile" text="Set path to LOINC Core Table file" />
+                   <MenuItem mnemonicParsing="false" onAction="#setPathToLoincCoreTableFile" text="Set path to LOINC Table Core file" />
                    <MenuItem mnemonicParsing="false" onAction="#downloadHPO" text="Download HPO file" />
                    <SeparatorMenuItem mnemonicParsing="false" />
                    <MenuItem mnemonicParsing="false" onAction="#setPathToCurationData" text="Set path to curation file" />

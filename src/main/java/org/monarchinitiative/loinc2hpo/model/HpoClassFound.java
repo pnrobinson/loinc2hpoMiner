@@ -1,6 +1,5 @@
 package org.monarchinitiative.loinc2hpo.model;
 
-import org.checkerframework.checker.nullness.Opt;
 import org.monarchinitiative.loinc2hpocore.annotation.Loinc2HpoAnnotation;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.Term;

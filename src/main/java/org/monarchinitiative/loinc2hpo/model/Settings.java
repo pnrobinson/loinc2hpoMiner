@@ -9,11 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static org.monarchinitiative.loinc2hpo.guitools.Platform.getLoinc2HpoDir;
 import static org.monarchinitiative.loinc2hpo.guitools.Platform.getPathToSettingsFile;
@@ -110,11 +105,11 @@ public class Settings {
     /**
      * This function will create the .loinc2hpo directory in the user's home directory if it does not yet exist.
      * Then it will return the path of the settings file.
-     * @return
+     * @return path to the loinc2hpominer settings file
      */
     public static File getPathToSettingsFileAndEnsurePathExists() {
         File loinc2HpoUserDir = getLoinc2HpoDir();
-        if (!loinc2HpoUserDir.exists()) {
+        if (loinc2HpoUserDir == null || !loinc2HpoUserDir.exists()) {
             File fck = new File(loinc2HpoUserDir.getAbsolutePath());
             if (!fck.mkdir()) { // make sure config directory is created, exit if not
                 logger.error("Unable to create LOINC2HPO config directory.\n"
@@ -123,7 +118,7 @@ public class Settings {
             }
         }
         String defaultSettingsPath = getPathToSettingsFile();
-        File settingsFile=new File(defaultSettingsPath);
+        File settingsFile = new File(defaultSettingsPath);
         return settingsFile;
     }
 
@@ -200,12 +195,11 @@ public class Settings {
     }
 
     public String toString() {
-        String builder = "hp.json: " + hpoJsonPath +
+        return "hp.json: " + hpoJsonPath +
                 "\n" +
                 "loincCoreTable: " + loincCoreTablePath +
                 "\n" +
                 "annotationFile: " + annotationFile;
-        return builder;
     }
 
 
