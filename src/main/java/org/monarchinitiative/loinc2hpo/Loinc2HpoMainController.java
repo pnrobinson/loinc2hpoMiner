@@ -353,6 +353,11 @@ public class Loinc2HpoMainController {
                     "Enter an HPO Id or text to search for HPO terms");
             return;
         }
+        if (optionalResources.getOntology() == null) {
+            PopUps.showInfoMessage("Cannot perform HPO query before initializing resources (See cofiguration menu)",
+                    "error");
+            return;
+        }
         HpoQuery hpoQuery = new HpoQuery(optionalResources.getOntology());
         List<HpoClassFound> foundHpoList = hpoQuery.query(query);
         hpoListView.getItems().clear();
@@ -362,10 +367,10 @@ public class Loinc2HpoMainController {
     @FXML
     private void initLOINCtable(ActionEvent e) {
         this.loincmap = optionalResources.getLoincTableMap();
-        if (this.loincmap.isEmpty()) {
+        if (this.loincmap == null || this.loincmap.isEmpty()) {
             runLater(() -> PopUps.showWarningDialog("No LOINC data was imported",
                     "Warning",
-                    "We could not import any LOINC data - \n did you import the correct LOINC file?"));
+                    "We could not import any LOINC data - \n did you import the correct LOINC file? (See configuration menu)"));
             return;
         }
         List<LoincEntry> lst = new ArrayList<>(loincmap.values());
@@ -394,6 +399,11 @@ public class Loinc2HpoMainController {
         e.consume();
         String query = this.loincSearchTextField.getText().trim();
         if (query.isEmpty()) return;
+        if (this.loincmap == null) {
+            PopUps.showInfoMessage("Cannot perform LOINC query before initializing reources (See configuration menu)",
+                    "error");
+            return;
+        }
         LoincQuery loincQuery = new LoincQuery(optionalResources.getLoincTableMap());
         List<LoincEntry> entrylist = loincQuery.query(query);
         LOGGER.trace(String.format("Searching table for:  %s", query));
@@ -1052,7 +1062,8 @@ public class Loinc2HpoMainController {
             return;
         }
         PopUps.showInfoMessage("", "Successfully saved annotation data");
-        e.consume();
+        javafx.application.Platform.exit();
+        System.exit(0);
     }
 
     public void saveBeforeExit() {

@@ -70,7 +70,7 @@ public class Platform {
 
     /** Return the absolute path to the settings file, which is kept in the .loinc2hpo directory in the
      * user's home directory. For simplicity assume one user per account etc. The file is a simple key:value file.
-     * @return
+     * @return path to the loinc2hpo.settings file
      */
     public static String getPathToSettingsFile() {
         File dir = getLoinc2HpoDir();
