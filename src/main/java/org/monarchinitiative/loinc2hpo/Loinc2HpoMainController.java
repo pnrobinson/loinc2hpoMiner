@@ -1062,8 +1062,6 @@ public class Loinc2HpoMainController {
             return;
         }
         PopUps.showInfoMessage("", "Successfully saved annotation data");
-        javafx.application.Platform.exit();
-        System.exit(0);
     }
 
     public void saveBeforeExit() {
@@ -1147,7 +1145,7 @@ public class Loinc2HpoMainController {
     }
 
     @FXML
-    private void handleReview(ActionEvent event) {
+    private void handleReview(ActionEvent e) {
         if (optionalResources.getLoincTableMap() == null || optionalResources.getLoincTableMap().isEmpty()) {
             PopUps.showInfoMessage("The loinc number is not found. Try clicking \"Initialize LOINC Table\"", "Loinc Not Found");
             return;
@@ -1161,7 +1159,7 @@ public class Loinc2HpoMainController {
             PopUps.showInfoMessage("TODO -- IMPLEMENT REVIEW.", "WARNING");
             return;
         }
-
+        e.consume();
     }
 
     @FXML
