@@ -705,6 +705,7 @@ public class Loinc2HpoMainController {
         LoincAnnotation nominalLoincAnnotation = new NominalLoincAnnotation(outcomeMap);
         System.out.println("TODO NOMINAL ANNOTATION");
         addAnnotationAndUpdateGui(loincCode, nominalLoincAnnotation);
+        currentAnnotationModel.reset();
     }
 
     @FXML
@@ -759,6 +760,7 @@ public class Loinc2HpoMainController {
             return;
         }
         addAnnotationAndUpdateGui(loincCode, opt.get());
+        currentAnnotationModel.reset();
     }
 
     @FXML
@@ -821,6 +823,7 @@ public class Loinc2HpoMainController {
         }
         LoincAnnotation quantAnnot = opt.get();
         addAnnotationAndUpdateGui(loincCode, quantAnnot);
+        currentAnnotationModel.reset();
         e.consume();
     }
 

@@ -78,9 +78,11 @@ public class CurrentAnnotationModel {
     }
 
     public boolean validOrdAnnotation(){
-        return qnLow == null && qnNormal != null && qnHigh == null &&  nominal == null &&
+        boolean b =  qnLow == null && qnNormal == null && qnHigh == null &&  nominal == null &&
                 ordNegative != null &&
                 ordPositive != null ;
+        return b;
+
     }
 
     public boolean validNomAnnotation(){
