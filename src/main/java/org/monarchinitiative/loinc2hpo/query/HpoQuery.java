@@ -13,16 +13,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
-public class HpoQuery {
-
-    private final Ontology hpo;
-
-
-    public HpoQuery(Ontology hpo) {
-        this.hpo = hpo;
-    }
-
+/**
+ * This class implements querying capabilities that allow client code to
+ * submit a query with one or more words and search for HPO terms that
+ * contain these words. Users can also query according to HPO id, e.g., HP:0001234.
+ * @author Peter Robinson, Aaron Zhang
+ */
+public record HpoQuery(Ontology hpo) {
     /**
+     * Search for either an HPO id (if the query string consists of an HP term id) or
+     * by strings that can match part or all of an HPO term label or synonym
      * @param query one or more words or an HPO Id
      * @return list of HPO terms with exact match to HPO id or at least partial match with text
      */
