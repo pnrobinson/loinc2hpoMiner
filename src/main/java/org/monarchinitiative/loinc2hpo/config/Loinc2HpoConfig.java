@@ -31,6 +31,7 @@ public class Loinc2HpoConfig {
         return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     }
 
+
     /**
      * Properties meant to store user configuration within the app's directory
      *
@@ -54,7 +55,7 @@ public class Loinc2HpoConfig {
     public File configFilePath(@Qualifier("appHomeDir") File appHomeDir) {
         return new File(appHomeDir, CONFIG_FILE_BASENAME);
     }
-//
+
 
     @Bean("appHomeDir")
     public File appHomeDir() throws IOException {

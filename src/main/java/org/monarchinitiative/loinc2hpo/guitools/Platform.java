@@ -97,7 +97,6 @@ public class Platform {
     /* Based on this post: http://www.mkyong.com/java/how-to-detect-os-in-java-systemgetpropertyosname/ */
     private static CurrentPlatform figureOutPlatform() {
         String osName = System.getProperty("os.name").toLowerCase();
-
         if (osName.contains("nix") || osName.contains("nux") || osName.contains("aix")) {
             return CurrentPlatform.LINUX;
         } else if (osName.contains("win")) {
@@ -134,13 +133,11 @@ public class Platform {
 
 
 
-
-
     private enum CurrentPlatform {
 
         LINUX("Linux"),
         WINDOWS("Windows"),
-        OSX("Os X"),
+        OSX("OSX"),
         UNKNOWN("Unknown");
 
         private final String name;

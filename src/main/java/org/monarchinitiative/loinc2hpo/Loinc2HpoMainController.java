@@ -88,7 +88,7 @@ public class Loinc2HpoMainController {
 
     @FXML
     private ListView<HpoClassFound> hpoListView;
-    private ObservableList<HpoClassFound> hpoQueryResult = FXCollections.observableArrayList();
+    private final ObservableList<HpoClassFound> hpoQueryResult = FXCollections.observableArrayList();
 
 
     @FXML
@@ -168,8 +168,8 @@ public class Loinc2HpoMainController {
     private TableColumn<Loinc2HpoAnnotation, String> loincScaleColumn;
 
 
-    private BooleanProperty isPresentOrd = new SimpleBooleanProperty(false);
-    private BooleanProperty configurationComplete = new SimpleBooleanProperty(false);
+    private final BooleanProperty isPresentOrd = new SimpleBooleanProperty(false);
+    private final BooleanProperty configurationComplete = new SimpleBooleanProperty(false);
     /**
      * The allows us to get info from the pom.xml file
      * buildProperties.getName(), buildProperties.getVersion(), etc.
@@ -913,10 +913,13 @@ public class Loinc2HpoMainController {
 
     @FXML
     public void downloadHPO(ActionEvent e) {
-        String dirpath = Platform.getLoinc2HpoDir().getAbsolutePath();
-        File f = new File(dirpath);
-        if (!f.isDirectory()) {
-            LOGGER.trace("Cannot download hp.obo, because directory not existing at " + f.getAbsolutePath());
+        File dirpath = Platform.getLoinc2HpoDir();
+        if (dirpath == null) {
+            LOGGER.error("Cannot download hp.obo, because we could not retrieve directory from Platform.getLoinc2HpoDir()");
+            return;
+        }
+        if ( !dirpath.isDirectory()) {
+            LOGGER.trace("Cannot download hp.obo, because directory not existing at " + dirpath.getAbsolutePath());
             return;
         }
         ProgressIndicator pb = new ProgressIndicator();
@@ -929,7 +932,7 @@ public class Loinc2HpoMainController {
         Stage window = new Stage();
         window.setTitle("HPO download");
         window.setScene(scene);
-        Task<Void> hpodownload = new HpoMenuDownloader(dirpath);
+        Task<Void> hpodownload = new HpoMenuDownloader(dirpath.getAbsolutePath());
         new Thread(hpodownload).start();
         window.show();
         hpodownload.setOnSucceeded(event -> {

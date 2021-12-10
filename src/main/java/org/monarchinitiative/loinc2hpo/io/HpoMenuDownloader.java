@@ -50,36 +50,32 @@ public class HpoMenuDownloader extends Task<Void>  {
      * This works for the HTTP and the HTTPS protocol and for FTP through a proxy. For plain FTP, we need to use the
      * passive mode.
      */
-    private boolean copyURLToFileThroughURL(URL src, File dest)  {
+    private void copyURLToFileThroughURL(URL src, File dest)  {
         // actually copy the file
         BufferedInputStream in;
         FileOutputStream out;
         try {
             int connectionTimeout = 5000; // 5 seconds should be more than enough to connect to a server
             final String TEXTPLAIN_REQUEST_TYPE = ", text/plain; q=0.1";
-            String actualAcceptHeaders = TEXTPLAIN_REQUEST_TYPE;
-            URLConnection connection =  connect(src.openConnection(),connectionTimeout,actualAcceptHeaders,new HashSet<>());
+            URLConnection connection =  connect(src.openConnection(),
+                    connectionTimeout,
+                    TEXTPLAIN_REQUEST_TYPE,
+                    new HashSet<>());
             final int fileSize = connection.getContentLength();
             in = new BufferedInputStream(connection.getInputStream());
             out = new FileOutputStream(dest);
-
             // Download file.
             byte [] buffer = new byte[128 * 1024];
             int readCount;
-            long pos = 0;
-
             while ((readCount = in.read(buffer)) > 0) {
                 out.write(buffer, 0, readCount);
-                pos += readCount;
             }
             in.close();
             out.close();
-
         } catch (IOException | IllegalStateException e) {
             logger.error(String.format("Failed to downloaded file from %s",src.getHost()),e);
             throw new Loinc2HpoRunTimeException("ERROR: Problem downloading file: " + e.getMessage());
         }
-        return true;
     }
 
 

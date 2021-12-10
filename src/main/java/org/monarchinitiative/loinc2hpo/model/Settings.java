@@ -109,7 +109,12 @@ public class Settings {
      */
     public static File getPathToSettingsFileAndEnsurePathExists() {
         File loinc2HpoUserDir = getLoinc2HpoDir();
-        if (loinc2HpoUserDir == null || !loinc2HpoUserDir.exists()) {
+        if (loinc2HpoUserDir == null) {
+            logger.error("Unable to create LOINC2HPO config directory.\n"
+                    + "Even though this is a serious problem I'm exiting gracefully. Bye.");
+            System.exit(1);
+        }
+        if (!loinc2HpoUserDir.exists()) {
             File fck = new File(loinc2HpoUserDir.getAbsolutePath());
             if (!fck.mkdir()) { // make sure config directory is created, exit if not
                 logger.error("Unable to create LOINC2HPO config directory.\n"
@@ -118,8 +123,7 @@ public class Settings {
             }
         }
         String defaultSettingsPath = getPathToSettingsFile();
-        File settingsFile = new File(defaultSettingsPath);
-        return settingsFile;
+        return new File(defaultSettingsPath);
     }
 
     public static Logger getLogger() {

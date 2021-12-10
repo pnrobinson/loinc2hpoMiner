@@ -6,7 +6,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
-import org.monarchinitiative.loinc2hpo.guitools.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,10 +14,8 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.Optional;
 
 @Component
@@ -57,16 +54,6 @@ public class StageInitializer implements ApplicationListener<Loinc2HpoApplicatio
     }
 
     private static Optional<Image> readAppIcon() {
-        if (Platform.isMacintosh()) {
-            try {
-                URL iconURL = StageInitializer.class.getResource("/img/phenomenon.png");
-                java.awt.Image macimage = new ImageIcon(iconURL).getImage();
-                // not working
-                // com.apple.eawt.Application.getApplication().setDockIconImage(macimage);
-            } catch (Exception e) {
-                // Won't work on Windows or Linux. Just skip it!
-            }
-        }
         try (InputStream is = StageInitializer.class.getResourceAsStream("/img/phenomenon.png")) {
             if (is != null) {
                 return Optional.of(new Image(is));
