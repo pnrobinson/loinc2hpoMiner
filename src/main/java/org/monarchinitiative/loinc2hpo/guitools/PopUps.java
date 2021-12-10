@@ -78,21 +78,6 @@ public class PopUps {
         return filechooser.showSaveDialog(ownerWindow);
     }
 
-    /**
-     * Ask user to choose a directory
-     *
-     * @param ownerWindow      - Stage with which the DirectoryChooser will be associated
-     * @param initialDirectory - Where to start the search
-     * @param title            - Title of PopUp window
-     * @return
-     */
-    @Deprecated // Use ScreensConfig instead
-    public static File selectDirectory(Stage ownerWindow, File initialDirectory, String title) {
-        final DirectoryChooser dirchooser = new DirectoryChooser();
-        dirchooser.setInitialDirectory(initialDirectory);
-        dirchooser.setTitle(title);
-        return dirchooser.showDialog(ownerWindow);
-    }
 
     /**
      * Request a String from user.
@@ -117,7 +102,7 @@ public class PopUps {
      * Ask user a boolean question and get an answer.
      *
      * @param windowTitle Title of PopUp window
-     * @return
+     * @return true or false
      */
     public static boolean getBooleanFromUser(String question, String headerText, String windowTitle) {
         Alert al = new Alert(AlertType.CONFIRMATION);
@@ -229,53 +214,5 @@ public class PopUps {
         a.setContentText(contentText);
         a.showAndWait();
     }
-
-
-    public static void showHtmlContent(String windowTitle, String resourcePath, Stage ownerWindow) {
-        Stage window = getPopUpStage(windowTitle);
-        Stage adjWindow = adjustStagePosition(window, ownerWindow);
-        adjWindow.initStyle(StageStyle.DECORATED);
-        adjWindow.setResizable(true);
-
-        WebView browser = new WebView();
-        WebEngine engine = browser.getEngine();
-        engine.load(PopUps.class.getResource(resourcePath).toString());
-
-        adjWindow.setScene(new Scene(browser));
-        adjWindow.showAndWait();
-
-    }
-
-
-    private static Stage getPopUpStage(String title) {
-        Stage window = new Stage();
-        window.setResizable(false);
-        window.centerOnScreen();
-        window.setTitle(title);
-        window.initStyle(StageStyle.UTILITY);
-        window.initModality(Modality.APPLICATION_MODAL);
-        return window;
-    }
-
-
-    /**
-     * Ensure that popup Stage will be displayed on the same monitor as the parent Stage
-     *
-     * @param childStage
-     * @param parentStage
-     * @return
-     */
-    private static Stage adjustStagePosition(Stage childStage, Stage parentStage) {
-        ObservableList<Screen> screensForParentWindow = Screen.getScreensForRectangle(parentStage.getX(), parentStage.getY(),
-                parentStage.getWidth(), parentStage.getHeight());
-        Screen actual = screensForParentWindow.get(0);
-        Rectangle2D bounds = actual.getVisualBounds();
-
-        // set top left position to 35%/25% of screen/monitor width & height
-        childStage.setX(bounds.getWidth() * 0.35);
-        childStage.setY(bounds.getHeight() * 0.25);
-        return childStage;
-    }
-
 
 }
