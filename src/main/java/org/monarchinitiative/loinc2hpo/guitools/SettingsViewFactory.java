@@ -26,14 +26,12 @@ public class SettingsViewFactory extends AbstractWebviewFactory {
     }
 
     private String settingsList() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("<p>Settings:</p><ul>\n");
-        sb.append(String.format("<li>Path to LOINC Core Table: %s</li>",settings.getLoincCoreTablePath()));
-        sb.append(String.format("<li>Path to <tt>hp.json</tt> file: %s</li>",settings.getHpoJsonPath()));
-        sb.append(String.format("<li>Path to annotation file: %s</li>",settings.getAnnotationFile()));
-        sb.append(String.format("<li>Biocurator ID: %s</li>",settings.getBiocuratorID()));
-        sb.append("</ul>\n");
-        return sb.toString();
+        return "<p>Settings:</p><ul>\n" +
+                String.format("<li>Path to LOINC Core Table: %s</li>", settings.getLoincCoreTablePath()) +
+                String.format("<li>Path to <tt>hp.json</tt> file: %s</li>", settings.getHpoJsonPath()) +
+                String.format("<li>Path to annotation file: %s</li>", settings.getAnnotationFile()) +
+                String.format("<li>Biocurator ID: %s</li>", settings.getBiocuratorID()) +
+                "</ul>\n";
     }
 
     public void openDialog() {

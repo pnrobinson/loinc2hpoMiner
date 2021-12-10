@@ -19,7 +19,7 @@ import java.util.Objects;
  */
 public class BooleanBox {
     Stage window;
-    ObjectProperty<Boolean> acceptProperty = new SimpleObjectProperty<>(false);
+    final ObjectProperty<Boolean> acceptProperty = new SimpleObjectProperty<>(false);
     private final String title;
     private final String html;
 
