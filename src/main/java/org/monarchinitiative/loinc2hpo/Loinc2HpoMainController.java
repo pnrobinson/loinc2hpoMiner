@@ -1257,4 +1257,20 @@ public class Loinc2HpoMainController {
             this.hpoListView.getItems().addAll(foundHpos);
         });
     }
+
+    /**
+     * This method is called by right click on the LOINC annotations to
+     * mark a certain LOINC id as not for annotation. This removes terms that
+     * for whatever reason cannot be annotated to HPO terms. These terms
+     * will then not be shown on the GUI. An example would be LOINC terms that
+     * denote a general specimen rather than a specific tissue, e.g.,
+     * 98062-3, Sequencing study identifier.
+     * @param actionEvent
+     */
+    @FXML
+    private void cannotBeAnnotated(ActionEvent actionEvent) {
+        LoincEntry selectedEntry = this.loincTableView.getSelectionModel().getSelectedItem();
+        LoincId loincId = selectedEntry.getLoincId();
+        LOGGER.info("Adding {} to cannot-be-annotated list TODO ", selectedEntry.getLongName());
+    }
 }

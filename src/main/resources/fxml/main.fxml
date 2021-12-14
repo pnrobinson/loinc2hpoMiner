@@ -210,6 +210,8 @@
                                    <ContextMenu>
                                        <items>
                                            <MenuItem mnemonicParsing="false" onAction="#editExistingLoincAnnotation" text="edit annotation" />
+                                           <MenuItem mnemonicParsing="false" onAction="#cannotBeAnnotated" text="Cannot be annotated" />
+
                                        </items>
                                    </ContextMenu>
                                </contextMenu>

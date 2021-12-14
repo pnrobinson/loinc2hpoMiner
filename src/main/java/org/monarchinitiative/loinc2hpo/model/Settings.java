@@ -31,6 +31,7 @@ public class Settings {
     private final StringProperty loincCoreTablePath;
     /** Path to the LOINC2HPO annotations.tsv file */
     private final StringProperty annotationFile;
+    private final StringProperty cannotBeAnnotatedFile;
     private final StringProperty biocuratorID;
     private final BooleanProperty isComplete = new SimpleBooleanProperty(false);
 
@@ -38,13 +39,19 @@ public class Settings {
         this.hpoJsonPath = new SimpleStringProperty();
         this.loincCoreTablePath = new SimpleStringProperty();
         this.annotationFile = new SimpleStringProperty();
+        this.cannotBeAnnotatedFile = new SimpleStringProperty();
         this.biocuratorID = new SimpleStringProperty();
     }
 
-    public Settings(String hpoJsonPath, String loincCoreTablePath, String annotationTsv, String biocuratorID) {
+    public Settings(String hpoJsonPath,
+                    String loincCoreTablePath,
+                    String annotationTsv,
+                    String cannotBeAnnotated,
+                    String biocuratorID) {
         this.hpoJsonPath = new SimpleStringProperty(hpoJsonPath);
         this.loincCoreTablePath = new SimpleStringProperty(loincCoreTablePath);
         this.annotationFile = new SimpleStringProperty(annotationTsv);
+        this.cannotBeAnnotatedFile = new SimpleStringProperty(cannotBeAnnotated);
         this.biocuratorID = new SimpleStringProperty(biocuratorID);
     }
 
@@ -68,12 +75,15 @@ public class Settings {
                 case "loincTablePath" -> settings.setLoincCoreTablePath(value);
                 case "hp-json" -> settings.setHpoJsonPath(value);
                 case "autosave to" -> settings.setAnnotationFile(value);
+                case "cannot-annotated" -> settings.setCannotBeAnnotated(value);
             }
         }
         br.close();
 
         return settings;
     }
+
+
 
     public static void writeSettings(Settings settings, String path) {
         try {
@@ -172,6 +182,10 @@ public class Settings {
     public void setAnnotationFile(String annotationFile) {
         this.annotationFile.set(annotationFile);
         this.isComplete.set(status());
+    }
+
+    public void setCannotBeAnnotated(String value) {
+        this.cannotBeAnnotatedFile.set(value);
     }
 
     public String getBiocuratorID() {
