@@ -21,7 +21,7 @@ mvn package
 
 The app can then be started with
 ```bazaar
-java -jar target/loinc2hpo-miner-0.1.1.jar 
+java -jar target/loinc2hpo-miner-0.2.2.jar 
 ```
 
 
